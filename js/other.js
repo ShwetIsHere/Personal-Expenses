@@ -36,8 +36,9 @@ async function renderOther(container) {
     </div>
     
     <div class="p-5">
+      
       <!-- Stats -->
-      <div class="grid grid-4 mb-4">
+      <div class="grid grid-4" style="gap: 24px; margin-bottom: 32px;">
         <div class="stat-card">
           <div class="stat-label">Total Expenses</div>
           <div class="stat-value">${formatCurrency(totalSpent)}</div>
@@ -76,7 +77,7 @@ async function renderOther(container) {
       </div>
       
       <!-- Category Breakdown -->
-      <div class="grid grid-3 mb-4">
+      <div class="grid grid-3" style="gap: 24px; margin-bottom: 32px;">
         <h3 style="grid-column: 1 / -1; font-size: 20px; font-weight: 600; margin-bottom: -8px;">
           <i class="fas fa-chart-pie"></i> Expense Categories
         </h3>
@@ -96,9 +97,7 @@ async function renderOther(container) {
             </div>
           </div>
         `).join('')}
-      </div>
-      
-      <!-- All Expenses -->
+      </div>      <!-- All Expenses -->
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
@@ -115,6 +114,7 @@ async function renderOther(container) {
           <table>
             <thead>
               <tr>
+                <th>ID</th>
                 <th>Type</th>
                 <th>Date</th>
                 <th>Amount</th>
@@ -124,6 +124,7 @@ async function renderOther(container) {
             <tbody>
               ${other.map(item => `
                 <tr>
+                  <td style="font-weight: 600;">#${item.entry_id}</td>
                   <td>
                     <div style="display: flex; align-items: center; gap: 12px;">
                       <div class="card-icon" style="background: var(--gradient-5); width: 40px; height: 40px; font-size: 16px;">
@@ -137,11 +138,8 @@ async function renderOther(container) {
                   <td>${formatDate(item.date)}</td>
                   <td class="text-warning" style="font-size: 18px; font-weight: 700;">${formatCurrency(item.price)}</td>
                   <td>
-                    <button class="btn btn-edit" onclick="editOther(${item.entry_id})">
+                    <button class="btn btn-edit" onclick="editOther(${item.entry_id}, '${item.type}', '${formatDate(item.date)}', ${item.price})">
                       <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-delete" onclick="deleteOther(${item.entry_id})">
-                      <i class="fas fa-trash"></i>
                     </button>
                   </td>
                 </tr>
@@ -154,19 +152,106 @@ async function renderOther(container) {
   `;
 }
 
+// Other Expense Modal Functions
 function showAddOtherModal() {
-  showToast('Add Other Expense modal - To be implemented', 'success');
-}
-
-function editOther(id) {
-  showToast(`Edit Other Expense ${id}`, 'success');
-}
-
-function deleteOther(id) {
-  if (confirm('Are you sure you want to delete this expense?')) {
-    window.electronAPI.deleteRecord('other', id, 'entry_id').then(() => {
-      showToast('Expense deleted successfully', 'success');
+  const modal = createModal('Add Other Expense', `
+    <form id="otherForm">
+      <div class="form-group">
+        <label class="form-label">Expense Type</label>
+        <input type="text" class="form-input" name="type" required placeholder="e.g., Shopping, Entertainment, Bills">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" name="date" required value="${new Date().toISOString().split('T')[0]}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price (₹)</label>
+        <input type="number" step="0.01" class="form-input" name="price" required>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('otherForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.insertRecord('other', data);
+    if (result.success) {
+      showToast('Expense added successfully!', 'success');
+      closeModal();
       loadPage('other');
-    });
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
+}
+
+function editOther(id, type, date, price) {
+  const modal = createModal('Edit Other Expense', `
+    <form id="otherEditForm">
+      <div class="form-group">
+        <label class="form-label">Expense Type</label>
+        <input type="text" class="form-input" name="type" required value="${type}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" name="date" required value="${date}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price (₹)</label>
+        <input type="number" step="0.01" class="form-input" name="price" required value="${price}">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('otherEditForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.updateRecord('other', data, id, 'entry_id');
+    if (result.success) {
+      showToast('Expense updated successfully!', 'success');
+      closeModal();
+      loadPage('other');
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
+}
+
+// Utility function to create modal
+function createModal(title, content) {
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'current-modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">${title}</h2>
+        <button class="modal-close" onclick="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      ${content}
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function closeModal() {
+  const modal = document.getElementById('current-modal');
+  if (modal) {
+    modal.remove();
   }
 }

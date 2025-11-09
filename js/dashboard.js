@@ -7,16 +7,7 @@ async function renderDashboard(container) {
     return;
   }
   
-  const { totals, monthlyData, recentTransactions, insuranceData } = data.data;
-  const totalExpenses = totals.fuel + totals.service + totals.games + totals.study + totals.other;
-  
-  // Prepare monthly chart data
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const monthlyAmounts = new Array(12).fill(0);
-  
-  monthlyData.forEach(item => {
-    monthlyAmounts[item.month - 1] = parseFloat(item.total);
-  });
+  const { totals, studyYearTotal, lastFuelDate, gamesCount, gamesTotalPrice, avgOdometerData, lastRecords } = data.data;
   
   container.innerHTML = `
     <div class="page-header">
@@ -29,142 +20,141 @@ async function renderDashboard(container) {
     
     <div class="p-5">
       <!-- Stats Overview -->
-      <div class="grid grid-4 mb-4">
+      <div class="grid grid-4" style="gap: 24px; margin-bottom: 32px;">
         <div class="stat-card" style="--gradient: var(--gradient-1)">
-          <div class="stat-label">Total Expenses</div>
-          <div class="stat-value">${formatCurrency(totalExpenses)}</div>
+          <div class="stat-label">Study Expenses</div>
+          <div class="stat-value">${formatCurrency(studyYearTotal)}</div>
           <div class="stat-change positive">
-            <i class="fas fa-arrow-up"></i>
+            <i class="fas fa-graduation-cap"></i>
             <span>This Year</span>
           </div>
         </div>
         
         <div class="stat-card" style="--gradient: var(--gradient-2)">
-          <div class="stat-label">Vehicle Expenses</div>
-          <div class="stat-value">${formatCurrency(totals.fuel + totals.service)}</div>
+          <div class="stat-label">Last Fuel Fill</div>
+          <div class="stat-value" style="font-size: 20px;">${formatDate(lastFuelDate)}</div>
           <div class="stat-change">
-            <i class="fas fa-car"></i>
-            <span>Fuel & Service</span>
+            <i class="fas fa-gas-pump"></i>
+            <span>Most Recent</span>
           </div>
         </div>
         
         <div class="stat-card" style="--gradient: var(--gradient-3)">
-          <div class="stat-label">Games & Study</div>
-          <div class="stat-value">${formatCurrency(totals.games + totals.study)}</div>
+          <div class="stat-label">Total Games</div>
+          <div class="stat-value">${gamesCount}</div>
           <div class="stat-change">
             <i class="fas fa-gamepad"></i>
-            <span>Entertainment & Education</span>
+            <span>In Library</span>
           </div>
         </div>
         
         <div class="stat-card" style="--gradient: var(--gradient-4)">
-          <div class="stat-label">Other Expenses</div>
-          <div class="stat-value">${formatCurrency(totals.other)}</div>
+          <div class="stat-label">Games Total Price</div>
+          <div class="stat-value">${formatCurrency(gamesTotalPrice)}</div>
           <div class="stat-change">
-            <i class="fas fa-receipt"></i>
-            <span>Miscellaneous</span>
+            <i class="fas fa-tags"></i>
+            <span>All Time</span>
           </div>
         </div>
       </div>
       
-      <!-- Charts Row -->
-      <div class="grid grid-2 mb-4">
-        <!-- Monthly Expenses Chart -->
+            <!-- Charts Row -->
+      <div class="grid grid-2" style="gap: 24px; margin-bottom: 32px;">
+        <!-- Fuel Amount vs KM Run -->
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">
               <div class="card-icon" style="background: var(--gradient-1)">
-                <i class="fas fa-chart-area"></i>
+                <i class="fas fa-tachometer-alt"></i>
               </div>
-              Monthly Expenses
+              Fuel Amount vs KM Run
             </h3>
           </div>
           <div class="chart-container">
-            <canvas id="monthlyChart"></canvas>
+            <canvas id="fuelKmChart"></canvas>
           </div>
         </div>
         
-        <!-- Category Distribution Chart -->
+        <!-- Price Distribution Bar Chart -->
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">
               <div class="card-icon" style="background: var(--gradient-2)">
-                <i class="fas fa-chart-pie"></i>
+                <i class="fas fa-chart-bar"></i>
               </div>
-              Expense Distribution
+              Price Distribution (All Time)
             </h3>
           </div>
           <div class="chart-container">
-            <canvas id="categoryChart"></canvas>
+            <canvas id="priceDistributionChart"></canvas>
           </div>
         </div>
       </div>
       
-      <!-- Recent Transactions & Insurance -->
-      <div class="grid grid-2">
-        <!-- Recent Transactions -->
+      <!-- Last Added Records Cards -->
+      <div class="card" style="margin-bottom: 32px;">
+        <div class="card-header">
+          <h3 class="card-title">
+            <div class="card-icon" style="background: var(--gradient-5)">
+              <i class="fas fa-clock"></i>
+            </div>
+            Last Added Records
+          </h3>
+        </div>
+        <div class="grid grid-5" style="gap: 20px; padding: 20px;">
+          ${lastRecords.slice(0, 5).map(record => `
+            <div class="card" style="background: var(--secondary-bg); padding: 16px;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                <div class="card-icon" style="background: var(--gradient-${getGradientForType(record.type)}); width: 40px; height: 40px; font-size: 18px;">
+                  <i class="fas fa-${getIconForType(record.type)}"></i>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">${record.type}</div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">${formatDate(record.record_date)}</div>
+                </div>
+              </div>
+              <div style="font-size: 24px; font-weight: 700; color: var(--accent-${getGradientForType(record.type)});">
+                ${formatCurrency(record.amount)}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <!-- Last Added Records Table -->
+      <div class="grid grid-1" style="gap: 24px;">
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">
               <div class="card-icon" style="background: var(--gradient-3)">
-                <i class="fas fa-history"></i>
+                <i class="fas fa-list"></i>
               </div>
-              Recent Transactions
+              Recent Activity (All Tables)
             </h3>
           </div>
           <div class="table-container">
             <table>
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Type</th>
                   <th>Date</th>
                   <th>Amount</th>
                 </tr>
               </thead>
               <tbody>
-                ${recentTransactions.map(tx => `
+                ${lastRecords.map(record => `
                   <tr>
+                    <td style="font-weight: 600;">#${record.id}</td>
                     <td>
-                      <span class="badge badge-${tx.type.toLowerCase()}">${tx.type}</span>
+                      <span class="badge badge-${record.type.toLowerCase()}">${record.type}</span>
                     </td>
-                    <td>${formatDate(tx.date)}</td>
-                    <td class="text-success">${formatCurrency(tx.amount)}</td>
+                    <td>${formatDate(record.record_date)}</td>
+                    <td class="text-success">${formatCurrency(record.amount)}</td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
-          </div>
-        </div>
-        
-        <!-- Upcoming Insurance -->
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">
-              <div class="card-icon" style="background: var(--gradient-5)">
-                <i class="fas fa-shield-alt"></i>
-              </div>
-              Active Insurance Policies
-            </h3>
-          </div>
-          <div style="padding: 16px 0;">
-            ${insuranceData.length > 0 ? insuranceData.map(ins => `
-              <div style="padding: 16px; border-bottom: 1px solid var(--border-color);">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
-                  <div>
-                    <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">${ins.name}</h4>
-                    <p style="font-size: 13px; color: var(--text-muted);">${ins.company} - ${ins.type}</p>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-                      Expires: ${formatDate(ins.end)}
-                    </p>
-                  </div>
-                  <div style="text-align: right;">
-                    <div style="font-size: 18px; font-weight: 700; color: var(--accent-5);">
-                      ${formatCurrency(ins.amount)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `).join('') : '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No active insurance policies</p>'}
           </div>
         </div>
       </div>
@@ -186,36 +176,185 @@ async function renderDashboard(container) {
     .badge-service { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; }
     .badge-game { background: rgba(236, 72, 153, 0.2); color: #f9a8d4; }
     .badge-study { background: rgba(20, 184, 166, 0.2); color: #5eead4; }
+    .badge-insurance { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
     .badge-other { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
   `;
   document.head.appendChild(badgeStyle);
   
   // Render charts
-  renderMonthlyChart(monthlyAmounts, monthNames);
-  renderCategoryChart(totals);
+  renderFuelKmChart(avgOdometerData);
+  renderPriceDistributionChart(totals);
 }
 
-function renderMonthlyChart(data, labels) {
-  const ctx = document.getElementById('monthlyChart');
+// Helper functions for icons and gradients
+function getIconForType(type) {
+  const icons = {
+    'Fuel': 'gas-pump',
+    'Service': 'wrench',
+    'Game': 'gamepad',
+    'Study': 'graduation-cap',
+    'Insurance': 'shield-alt',
+    'Other': 'receipt'
+  };
+  return icons[type] || 'circle';
+}
+
+function getGradientForType(type) {
+  const gradients = {
+    'Fuel': '1',
+    'Service': '2',
+    'Game': '3',
+    'Study': '4',
+    'Insurance': '5',
+    'Other': '5'
+  };
+  return gradients[type] || '1';
+}
+
+function renderFuelKmChart(data) {
+  const ctx = document.getElementById('fuelKmChart');
   if (!ctx) return;
+  
+  // Prepare data - reverse to show oldest to newest
+  const reversedData = [...data].reverse();
+  const labels = reversedData.map((item, index) => `Fill #${index + 1}`);
+  const fuelAmounts = reversedData.map(item => parseFloat(item.fuelAmount) || 0);
+  const kmRuns = reversedData.map(item => parseFloat(item.kmRun) || 0);
   
   new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels,
       datasets: [{
-        label: 'Expenses',
-        data: data,
+        label: 'Fuel Amount (₹)',
+        data: fuelAmounts,
         borderColor: '#667eea',
         backgroundColor: 'rgba(102, 126, 234, 0.1)',
-        borderWidth: 3,
-        fill: true,
+        borderWidth: 2,
         tension: 0.4,
         pointRadius: 4,
         pointBackgroundColor: '#667eea',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointHoverRadius: 6
+        yAxisID: 'y'
+      }, {
+        label: 'KM Run',
+        data: kmRuns,
+        borderColor: '#ec4899',
+        backgroundColor: 'rgba(236, 72, 153, 0.1)',
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#ec4899',
+        yAxisID: 'y1'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            color: '#9ca3af',
+            usePointStyle: true,
+            padding: 15
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(35, 41, 56, 0.95)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#667eea',
+          borderWidth: 1,
+          padding: 12
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            color: '#9ca3af'
+          }
+        },
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          grid: {
+            color: 'rgba(255, 255, 255, 0.05)'
+          },
+          ticks: {
+            color: '#9ca3af',
+            callback: function(value) {
+              return '₹' + value;
+            }
+          },
+          title: {
+            display: true,
+            text: 'Fuel Amount (₹)',
+            color: '#667eea'
+          }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          grid: {
+            drawOnChartArea: false
+          },
+          ticks: {
+            color: '#9ca3af',
+            callback: function(value) {
+              return value + ' km';
+            }
+          },
+          title: {
+            display: true,
+            text: 'KM Run',
+            color: '#ec4899'
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderPriceDistributionChart(totals) {
+  const ctx = document.getElementById('priceDistributionChart');
+  if (!ctx) return;
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Fuel', 'Service', 'Games', 'Study', 'Other', 'Insurance'],
+      datasets: [{
+        label: 'Total Spent (₹)',
+        data: [totals.fuel, totals.service, totals.games, totals.study, totals.other, totals.insurance],
+        backgroundColor: [
+          'rgba(102, 126, 234, 0.8)',
+          'rgba(139, 92, 246, 0.8)',
+          'rgba(236, 72, 153, 0.8)',
+          'rgba(20, 184, 166, 0.8)',
+          'rgba(245, 158, 11, 0.8)',
+          'rgba(99, 102, 241, 0.8)'
+        ],
+        borderColor: [
+          '#667eea',
+          '#8b5cf6',
+          '#ec4899',
+          '#14b8a6',
+          '#f59e0b',
+          '#6366f1'
+        ],
+        borderWidth: 2,
+        borderRadius: 8,
+        barThickness: 50
       }]
     },
     options: {
@@ -232,10 +371,9 @@ function renderMonthlyChart(data, labels) {
           borderColor: '#667eea',
           borderWidth: 1,
           padding: 12,
-          displayColors: false,
           callbacks: {
             label: function(context) {
-              return formatCurrency(context.parsed.y);
+              return 'Total: ₹' + context.parsed.y.toLocaleString('en-IN', { minimumFractionDigits: 2 });
             }
           }
         }
@@ -243,11 +381,14 @@ function renderMonthlyChart(data, labels) {
       scales: {
         x: {
           grid: {
-            display: false,
-            color: 'rgba(255, 255, 255, 0.05)'
+            display: false
           },
           ticks: {
-            color: '#9ca3af'
+            color: '#9ca3af',
+            font: {
+              size: 12,
+              weight: '500'
+            }
           }
         },
         y: {
@@ -258,71 +399,16 @@ function renderMonthlyChart(data, labels) {
           ticks: {
             color: '#9ca3af',
             callback: function(value) {
-              return '₹' + value.toLocaleString();
+              return '₹' + (value / 1000).toFixed(0) + 'k';
             }
+          },
+          title: {
+            display: true,
+            text: 'Total Spent (₹)',
+            color: '#9ca3af'
           }
         }
       }
-    }
-  });
-}
-
-function renderCategoryChart(totals) {
-  const ctx = document.getElementById('categoryChart');
-  if (!ctx) return;
-  
-  new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Fuel', 'Service', 'Games', 'Study', 'Other'],
-      datasets: [{
-        data: [totals.fuel, totals.service, totals.games, totals.study, totals.other],
-        backgroundColor: [
-          '#6366f1',
-          '#8b5cf6',
-          '#ec4899',
-          '#14b8a6',
-          '#f59e0b'
-        ],
-        borderWidth: 0,
-        hoverOffset: 10
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            color: '#9ca3af',
-            padding: 16,
-            usePointStyle: true,
-            font: {
-              size: 12,
-              family: 'Inter'
-            }
-          }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(35, 41, 56, 0.95)',
-          titleColor: '#fff',
-          bodyColor: '#fff',
-          borderColor: '#667eea',
-          borderWidth: 1,
-          padding: 12,
-          callbacks: {
-            label: function(context) {
-              const label = context.label || '';
-              const value = formatCurrency(context.parsed);
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = ((context.parsed / total) * 100).toFixed(1);
-              return `${label}: ${value} (${percentage}%)`;
-            }
-          }
-        }
-      },
-      cutout: '65%'
     }
   });
 }

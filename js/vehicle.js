@@ -20,13 +20,14 @@ async function renderVehicle(container) {
     
     <div class="p-5">
       <!-- Vehicle Info Cards -->
-      <div class="grid grid-3 mb-4">
+      <div class="grid grid-3" style="gap: 24px; margin-bottom: 32px;">
         ${vehicles.map(vehicle => `
           <div class="card">
             <div class="card-icon" style="background: var(--gradient-1); width: 60px; height: 60px; font-size: 28px; margin-bottom: 16px;">
               <i class="fas fa-car"></i>
             </div>
             <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">${vehicle.registration_number}</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 4px;">ID: ${vehicle.vehicle_id}</p>
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 4px;">${vehicle.owner_name}</p>
             <p style="color: var(--text-muted); font-size: 12px;">Chassis: ${vehicle.chassis_number}</p>
           </div>
@@ -39,7 +40,7 @@ async function renderVehicle(container) {
       </div>
       
       <!-- Tabs -->
-      <div class="tabs-container mb-4">
+      <div class="tabs-container" style="margin-bottom: 24px;">
         <button class="tab-btn active" onclick="switchVehicleTab('fuel')">
           <i class="fas fa-gas-pump"></i> Fuel Records
         </button>
@@ -69,28 +70,40 @@ async function renderVehicle(container) {
             <table>
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Date</th>
                   <th>Odometer</th>
+                  <th>KM Done</th>
                   <th>Cost</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                ${fuel.map(item => `
+                ${fuel.map((item, index) => {
+                  // Calculate KM Done - difference from previous entry
+                  let kmDone = '-';
+                  if (item.odometer && index < fuel.length - 1) {
+                    const prevOdometer = fuel[index + 1].odometer;
+                    if (prevOdometer) {
+                      kmDone = (item.odometer - prevOdometer).toLocaleString() + ' km';
+                    }
+                  }
+                  
+                  return `
                   <tr>
+                    <td style="font-weight: 600;">#${item.entry_id}</td>
                     <td>${formatDate(item.date)}</td>
                     <td>${item.odometer ? item.odometer.toLocaleString() + ' km' : '-'}</td>
+                    <td style="color: var(--primary);">${kmDone}</td>
                     <td class="text-success">${formatCurrency(item.total_cost)}</td>
                     <td>
-                      <button class="btn btn-edit" onclick="editFuel(${item.entry_id})">
+                      <button class="btn btn-edit" onclick="editFuel(${item.entry_id}, '${formatDate(item.date)}', ${item.odometer || 0}, ${item.total_cost})">
                         <i class="fas fa-edit"></i>
-                      </button>
-                      <button class="btn btn-delete" onclick="deleteFuel(${item.entry_id})">
-                        <i class="fas fa-trash"></i>
                       </button>
                     </td>
                   </tr>
-                `).join('')}
+                `;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -115,6 +128,7 @@ async function renderVehicle(container) {
             <table>
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Name</th>
                   <th>Date</th>
                   <th>Type</th>
@@ -126,17 +140,15 @@ async function renderVehicle(container) {
               <tbody>
                 ${service.map(item => `
                   <tr>
+                    <td style="font-weight: 600;">#${item.service_id}</td>
                     <td>${item.name || '-'}</td>
                     <td>${formatDate(item.service_date)}</td>
                     <td><span class="badge badge-service">${item.service_type || '-'}</span></td>
                     <td>${item.odometer ? item.odometer.toLocaleString() + ' km' : '-'}</td>
                     <td class="text-success">${formatCurrency(item.cost)}</td>
                     <td>
-                      <button class="btn btn-edit" onclick="editService(${item.service_id})">
+                      <button class="btn btn-edit" onclick="editService(${item.service_id}, '${item.name}', '${formatDate(item.service_date)}', '${item.service_type}', ${item.odometer || 0}, ${item.cost})">
                         <i class="fas fa-edit"></i>
-                      </button>
-                      <button class="btn btn-delete" onclick="deleteService(${item.service_id})">
-                        <i class="fas fa-trash"></i>
                       </button>
                     </td>
                   </tr>
@@ -165,6 +177,7 @@ async function renderVehicle(container) {
             <table>
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Name</th>
                   <th>Company</th>
                   <th>Policy No</th>
@@ -178,6 +191,7 @@ async function renderVehicle(container) {
               <tbody>
                 ${insurance.map(item => `
                   <tr>
+                    <td style="font-weight: 600;">#${item.insurance_id}</td>
                     <td>${item.name}</td>
                     <td>${item.company}</td>
                     <td>${item.policy_no}</td>
@@ -186,11 +200,8 @@ async function renderVehicle(container) {
                     <td>${formatDate(item.end)}</td>
                     <td class="text-warning">${formatCurrency(item.amount)}</td>
                     <td>
-                      <button class="btn btn-edit" onclick="editInsurance(${item.insurance_id})">
+                      <button class="btn btn-edit" onclick="editInsurance(${item.insurance_id}, '${item.name}', '${item.company}', '${item.policy_no}', '${item.type}', '${formatDate(item.start)}', '${formatDate(item.end)}', ${item.amount})">
                         <i class="fas fa-edit"></i>
-                      </button>
-                      <button class="btn btn-delete" onclick="deleteInsurance(${item.insurance_id})">
-                        <i class="fas fa-trash"></i>
                       </button>
                     </td>
                   </tr>
@@ -254,58 +265,350 @@ function switchVehicleTab(tab) {
   document.getElementById(`${tab}-tab`).style.display = 'block';
 }
 
-// Modal functions (simplified - you can expand these)
-function showAddVehicleModal() {
-  showToast('Add Vehicle modal - To be implemented', 'success');
-}
-
+// Modal functions for Fuel
 function showAddFuelModal() {
-  showToast('Add Fuel modal - To be implemented', 'success');
+  const modal = createModal('Add Fuel Entry', `
+    <form id="fuelForm">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" name="date" required value="${new Date().toISOString().split('T')[0]}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Total Cost (₹)</label>
+        <input type="number" step="0.01" class="form-input" name="total_cost" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Odometer (km)</label>
+        <input type="number" class="form-input" name="odometer">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('fuelForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.insertRecord('fuel', data);
+    if (result.success) {
+      showToast('Fuel entry added successfully!', 'success');
+      closeModal();
+      loadPage('vehicle');
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
 }
 
+function editFuel(id, date, odometer, cost) {
+  const modal = createModal('Edit Fuel Entry', `
+    <form id="fuelEditForm">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" name="date" required value="${date}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Total Cost (₹)</label>
+        <input type="number" step="0.01" class="form-input" name="total_cost" required value="${cost}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Odometer (km)</label>
+        <input type="number" class="form-input" name="odometer" value="${odometer}">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('fuelEditForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.updateRecord('fuel', data, id, 'entry_id');
+    if (result.success) {
+      showToast('Fuel entry updated successfully!', 'success');
+      closeModal();
+      loadPage('vehicle');
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
+}
+
+// Service Modal Functions
 function showAddServiceModal() {
-  showToast('Add Service modal - To be implemented', 'success');
+  const modal = createModal('Add Service Record', `
+    <form id="serviceForm">
+      <div class="form-group">
+        <label class="form-label">Service Name</label>
+        <input type="text" class="form-input" name="name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Date</label>
+        <input type="date" class="form-input" name="service_date" required value="${new Date().toISOString().split('T')[0]}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Type</label>
+        <input type="text" class="form-input" name="service_type" placeholder="e.g., Oil Change, Tire Rotation">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Odometer (km)</label>
+        <input type="number" class="form-input" name="odometer">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cost (₹)</label>
+        <input type="number" step="0.01" class="form-input" name="cost" required>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('serviceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.insertRecord('service', data);
+    if (result.success) {
+      showToast('Service record added successfully!', 'success');
+      closeModal();
+      loadPage('vehicle');
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
 }
 
+function editService(id, name, date, type, odometer, cost) {
+  const modal = createModal('Edit Service Record', `
+    <form id="serviceEditForm">
+      <div class="form-group">
+        <label class="form-label">Service Name</label>
+        <input type="text" class="form-input" name="name" required value="${name}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Date</label>
+        <input type="date" class="form-input" name="service_date" required value="${date}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Type</label>
+        <input type="text" class="form-input" name="service_type" value="${type}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Odometer (km)</label>
+        <input type="number" class="form-input" name="odometer" value="${odometer}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cost (₹)</label>
+        <input type="number" step="0.01" class="form-input" name="cost" required value="${cost}">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('serviceEditForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.updateRecord('service', data, id, 'service_id');
+    if (result.success) {
+      showToast('Service record updated successfully!', 'success');
+      closeModal();
+      loadPage('vehicle');
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
+}
+
+// Insurance Modal Functions
 function showAddInsuranceModal() {
-  showToast('Add Insurance modal - To be implemented', 'success');
-}
-
-function editFuel(id) {
-  showToast(`Edit Fuel Entry ${id}`, 'success');
-}
-
-function deleteFuel(id) {
-  if (confirm('Are you sure you want to delete this fuel entry?')) {
-    window.electronAPI.deleteRecord('fuel', id, 'entry_id').then(() => {
-      showToast('Fuel entry deleted successfully', 'success');
+  const modal = createModal('Add Insurance Policy', `
+    <form id="insuranceForm">
+      <div class="form-group">
+        <label class="form-label">Insurance Name</label>
+        <input type="text" class="form-input" name="name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company</label>
+        <input type="text" class="form-input" name="company" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Policy Number</label>
+        <input type="text" class="form-input" name="policy_no" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <input type="text" class="form-input" name="type" placeholder="e.g., Comprehensive, Third Party">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Start Date</label>
+        <input type="date" class="form-input" name="start" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">End Date</label>
+        <input type="date" class="form-input" name="end" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount (₹)</label>
+        <input type="number" step="0.01" class="form-input" name="amount" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Renewal Date</label>
+        <input type="date" class="form-input" name="renew_date">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('insuranceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.insertRecord('insurance', data);
+    if (result.success) {
+      showToast('Insurance policy added successfully!', 'success');
+      closeModal();
       loadPage('vehicle');
-    });
-  }
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
 }
 
-function editService(id) {
-  showToast(`Edit Service ${id}`, 'success');
-}
-
-function deleteService(id) {
-  if (confirm('Are you sure you want to delete this service record?')) {
-    window.electronAPI.deleteRecord('service', id, 'service_id').then(() => {
-      showToast('Service record deleted successfully', 'success');
+function editInsurance(id, name, company, policyNo, type, start, end, amount) {
+  const modal = createModal('Edit Insurance Policy', `
+    <form id="insuranceEditForm">
+      <div class="form-group">
+        <label class="form-label">Insurance Name</label>
+        <input type="text" class="form-input" name="name" required value="${name}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company</label>
+        <input type="text" class="form-input" name="company" required value="${company}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Policy Number</label>
+        <input type="text" class="form-input" name="policy_no" required value="${policyNo}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <input type="text" class="form-input" name="type" value="${type}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Start Date</label>
+        <input type="date" class="form-input" name="start" required value="${start}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">End Date</label>
+        <input type="date" class="form-input" name="end" required value="${end}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount (₹)</label>
+        <input type="number" step="0.01" class="form-input" name="amount" required value="${amount}">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('insuranceEditForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.updateRecord('insurance', data, id, 'insurance_id');
+    if (result.success) {
+      showToast('Insurance policy updated successfully!', 'success');
+      closeModal();
       loadPage('vehicle');
-    });
-  }
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
 }
 
-function editInsurance(id) {
-  showToast(`Edit Insurance ${id}`, 'success');
-}
-
-function deleteInsurance(id) {
-  if (confirm('Are you sure you want to delete this insurance policy?')) {
-    window.electronAPI.deleteRecord('insurance', id, 'insurance_id').then(() => {
-      showToast('Insurance policy deleted successfully', 'success');
+function showAddVehicleModal() {
+  const modal = createModal('Add New Vehicle', `
+    <form id="vehicleForm">
+      <div class="form-group">
+        <label class="form-label">Registration Number</label>
+        <input type="text" class="form-input" name="registration_number" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Owner Name</label>
+        <input type="text" class="form-input" name="owner_name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Chassis Number</label>
+        <input type="text" class="form-input" name="chassis_number">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.insertRecord('vehicle', data);
+    if (result.success) {
+      showToast('Vehicle added successfully!', 'success');
+      closeModal();
       loadPage('vehicle');
-    });
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
+}
+
+// Utility function to create modal
+function createModal(title, content) {
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'current-modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">${title}</h2>
+        <button class="modal-close" onclick="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      ${content}
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function closeModal() {
+  const modal = document.getElementById('current-modal');
+  if (modal) {
+    modal.remove();
   }
 }

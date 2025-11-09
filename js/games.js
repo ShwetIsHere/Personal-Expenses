@@ -32,8 +32,9 @@ async function renderGames(container) {
     </div>
     
     <div class="p-5">
+      
       <!-- Stats -->
-      <div class="grid grid-4 mb-4">
+      <div class="grid grid-4" style="gap: 24px; margin-bottom: 32px;">
         <div class="stat-card">
           <div class="stat-label">Total Games</div>
           <div class="stat-value">${games.length}</div>
@@ -72,7 +73,7 @@ async function renderGames(container) {
       </div>
       
       <!-- Platform Stats -->
-      <div class="grid grid-3 mb-4">
+      <div class="grid grid-3" style="gap: 24px; margin-bottom: 32px;">
         ${Object.entries(platformStats).map(([platform, stats]) => `
           <div class="card">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
@@ -92,16 +93,14 @@ async function renderGames(container) {
       </div>
       
       <!-- Tabs -->
-      <div class="tabs-container mb-4">
+      <div class="tabs-container" style="margin-bottom: 24px;">
         <button class="tab-btn active" onclick="switchGamesTab('games')">
           <i class="fas fa-gamepad"></i> Games
         </button>
         <button class="tab-btn" onclick="switchGamesTab('platforms')">
           <i class="fas fa-layer-group"></i> Platforms
         </button>
-      </div>
-      
-      <!-- Games Tab -->
+      </div>      <!-- Games Tab -->
       <div id="games-tab" class="tab-content active">
         <div class="card">
           <div class="card-header">
@@ -119,6 +118,7 @@ async function renderGames(container) {
             <table>
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Title</th>
                   <th>Platform</th>
                   <th>Purchase Date</th>
@@ -129,16 +129,14 @@ async function renderGames(container) {
               <tbody>
                 ${games.map(game => `
                   <tr>
+                    <td style="font-weight: 600;">#${game.game_id}</td>
                     <td style="font-weight: 600;">${game.title}</td>
                     <td><span class="badge badge-game">${game.platform}</span></td>
                     <td>${formatDate(game.date)}</td>
                     <td class="text-success">${formatCurrency(game.price)}</td>
                     <td>
-                      <button class="btn btn-edit" onclick="editGame(${game.game_id})">
+                      <button class="btn btn-edit" onclick="editGame(${game.game_id}, '${game.title}', '${game.platform}', '${formatDate(game.date)}', ${game.price})">
                         <i class="fas fa-edit"></i>
-                      </button>
-                      <button class="btn btn-delete" onclick="deleteGame(${game.game_id})">
-                        <i class="fas fa-trash"></i>
                       </button>
                     </td>
                   </tr>
@@ -163,7 +161,7 @@ async function renderGames(container) {
               <i class="fas fa-plus"></i> Add Platform
             </button>
           </div>
-          <div class="grid grid-2" style="padding: 20px;">
+          <div class="grid grid-2" style="gap: 24px; padding: 20px;">
             ${platforms.map(platform => `
               <div class="card" style="background: var(--secondary-bg);">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
@@ -171,14 +169,12 @@ async function renderGames(container) {
                     <i class="fas fa-gamepad"></i>
                   </div>
                   <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-edit" onclick="editPlatform(${platform.platform_id})" style="padding: 4px 8px;">
+                    <button class="btn btn-edit" onclick="editPlatform(${platform.platform_id}, '${platform.platform_name}', '${platform.account_username || ''}', '${platform.account_email || ''}')" style="padding: 4px 8px;">
                       <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-delete" onclick="deletePlatform(${platform.platform_id})" style="padding: 4px 8px;">
-                      <i class="fas fa-trash"></i>
                     </button>
                   </div>
                 </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">ID: #${platform.platform_id}</p>
                 <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">${platform.platform_name}</h3>
                 <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">
                   <i class="fas fa-user"></i> ${platform.account_username || 'No username'}
@@ -203,36 +199,205 @@ function switchGamesTab(tab) {
   document.getElementById(`${tab}-tab`).style.display = 'block';
 }
 
-function showAddGameModal() {
-  showToast('Add Game modal - To be implemented', 'success');
+// Game Modal Functions
+async function showAddGameModal() {
+  // Get platforms for dropdown
+  const data = await window.electronAPI.getGamesData();
+  const platforms = data.data.platforms || [];
+  
+  const modal = createModal('Add New Game', `
+    <form id="gameForm">
+      <div class="form-group">
+        <label class="form-label">Game Title</label>
+        <input type="text" class="form-input" name="title" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Platform</label>
+        <select class="form-input" name="platform" required>
+          <option value="">Select Platform</option>
+          ${platforms.map(p => `<option value="${p.platform_name}">${p.platform_name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Purchase Date</label>
+        <input type="date" class="form-input" name="date" required value="${new Date().toISOString().split('T')[0]}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price (₹)</label>
+        <input type="number" step="0.01" class="form-input" name="price" required>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('gameForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.insertRecord('games', data);
+    if (result.success) {
+      showToast('Game added successfully!', 'success');
+      closeModal();
+      loadPage('games');
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
 }
 
+async function editGame(id, title, platform, date, price) {
+  // Get platforms for dropdown
+  const data = await window.electronAPI.getGamesData();
+  const platforms = data.data.platforms || [];
+  
+  const modal = createModal('Edit Game', `
+    <form id="gameEditForm">
+      <div class="form-group">
+        <label class="form-label">Game Title</label>
+        <input type="text" class="form-input" name="title" required value="${title}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Platform</label>
+        <select class="form-input" name="platform" required>
+          <option value="">Select Platform</option>
+          ${platforms.map(p => `<option value="${p.platform_name}" ${p.platform_name === platform ? 'selected' : ''}>${p.platform_name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Purchase Date</label>
+        <input type="date" class="form-input" name="date" required value="${date}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price (₹)</label>
+        <input type="number" step="0.01" class="form-input" name="price" required value="${price}">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('gameEditForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.updateRecord('games', data, id, 'game_id');
+    if (result.success) {
+      showToast('Game updated successfully!', 'success');
+      closeModal();
+      loadPage('games');
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
+}
+
+// Platform Modal Functions
 function showAddPlatformModal() {
-  showToast('Add Platform modal - To be implemented', 'success');
-}
-
-function editGame(id) {
-  showToast(`Edit Game ${id}`, 'success');
-}
-
-function deleteGame(id) {
-  if (confirm('Are you sure you want to delete this game?')) {
-    window.electronAPI.deleteRecord('games', id, 'game_id').then(() => {
-      showToast('Game deleted successfully', 'success');
+  const modal = createModal('Add Gaming Platform', `
+    <form id="platformForm">
+      <div class="form-group">
+        <label class="form-label">Platform Name</label>
+        <input type="text" class="form-input" name="platform_name" required placeholder="e.g., PlayStation, Xbox, Steam">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Account Username</label>
+        <input type="text" class="form-input" name="account_username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Account Email</label>
+        <input type="email" class="form-input" name="account_email">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('platformForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.insertRecord('platforms', data);
+    if (result.success) {
+      showToast('Platform added successfully!', 'success');
+      closeModal();
       loadPage('games');
-    });
-  }
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
 }
 
-function editPlatform(id) {
-  showToast(`Edit Platform ${id}`, 'success');
-}
-
-function deletePlatform(id) {
-  if (confirm('Are you sure you want to delete this platform?')) {
-    window.electronAPI.deleteRecord('platforms', id, 'platform_id').then(() => {
-      showToast('Platform deleted successfully', 'success');
+function editPlatform(id, name, username, email) {
+  const modal = createModal('Edit Platform', `
+    <form id="platformEditForm">
+      <div class="form-group">
+        <label class="form-label">Platform Name</label>
+        <input type="text" class="form-input" name="platform_name" required value="${name}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Account Username</label>
+        <input type="text" class="form-input" name="account_username" value="${username}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Account Email</label>
+        <input type="email" class="form-input" name="account_email" value="${email}">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  `);
+  
+  document.getElementById('platformEditForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    const result = await window.electronAPI.updateRecord('platforms', data, id, 'platform_id');
+    if (result.success) {
+      showToast('Platform updated successfully!', 'success');
+      closeModal();
       loadPage('games');
-    });
+    } else {
+      showToast('Error: ' + result.error, 'error');
+    }
+  });
+}
+
+// Utility function to create modal
+function createModal(title, content) {
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'current-modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">${title}</h2>
+        <button class="modal-close" onclick="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      ${content}
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function closeModal() {
+  const modal = document.getElementById('current-modal');
+  if (modal) {
+    modal.remove();
   }
 }

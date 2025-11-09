@@ -699,7 +699,8 @@ tbody td {
 }
 
 .form-input,
-.form-select {
+.form-select,
+select.form-input {
   width: 100%;
   padding: 12px 16px;
   background: var(--secondary-bg);
@@ -712,10 +713,16 @@ tbody td {
 }
 
 .form-input:focus,
-.form-select:focus {
+.form-select:focus,
+select.form-input:focus {
   outline: none;
   border-color: var(--accent-1);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+select.form-input option {
+  background: var(--card-bg);
+  color: var(--text-primary);
 }
 
 .modal-actions {
@@ -744,6 +751,10 @@ tbody td {
 
 .grid-4 {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.grid-5 {
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .mt-1 { margin-top: 8px; }

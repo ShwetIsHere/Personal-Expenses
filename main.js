@@ -96,24 +96,24 @@ ipcMain.handle('db-query', async (event, query, params) => {
 // Get dashboard data
 ipcMain.handle('get-dashboard-data', async () => {
   try {
-    // Total fuel expenses
-    const [fuelTotal] = await dbConnection.execute(
-      'SELECT SUM(total_cost) as total FROM fuel WHERE YEAR(date) = YEAR(CURDATE())'
-    );
-    
-    // Total service expenses
-    const [serviceTotal] = await dbConnection.execute(
-      'SELECT SUM(cost) as total FROM service WHERE YEAR(service_date) = YEAR(CURDATE())'
-    );
-    
-    // Total games expenses
-    const [gamesTotal] = await dbConnection.execute(
-      'SELECT SUM(price) as total FROM games WHERE YEAR(date) = YEAR(CURDATE())'
-    );
-    
-    // Total study expenses
+    // Total study expenses per year
     const [studyTotal] = await dbConnection.execute(
       'SELECT SUM(amount) as total FROM study WHERE YEAR(date) = YEAR(CURDATE())'
+    );
+    
+    // Last fuel fill date
+    const [lastFuel] = await dbConnection.execute(
+      'SELECT MAX(date) as lastDate FROM fuel'
+    );
+    
+    // Total games count and price
+    const [gamesStats] = await dbConnection.execute(
+      'SELECT COUNT(*) as count, SUM(price) as total FROM games'
+    );
+    
+    // Total games expenses this year
+    const [gamesTotal] = await dbConnection.execute(
+      'SELECT SUM(price) as total FROM games WHERE YEAR(date) = YEAR(CURDATE())'
     );
     
     // Total other expenses
@@ -121,61 +121,72 @@ ipcMain.handle('get-dashboard-data', async () => {
       'SELECT SUM(price) as total FROM other WHERE YEAR(date) = YEAR(CURDATE())'
     );
     
-    // Monthly expenses for chart
-    const [monthlyData] = await dbConnection.execute(`
+    // Average vehicle cost based on odometer (km/rupee efficiency)
+    const [avgOdometerData] = await dbConnection.execute(`
       SELECT 
-        MONTH(date) as month,
-        SUM(total) as total
-      FROM (
-        SELECT date, total_cost as total FROM fuel WHERE YEAR(date) = YEAR(CURDATE())
-        UNION ALL
-        SELECT service_date as date, cost as total FROM service WHERE YEAR(service_date) = YEAR(CURDATE())
-        UNION ALL
-        SELECT date, price as total FROM games WHERE YEAR(date) = YEAR(CURDATE())
-        UNION ALL
-        SELECT date, amount as total FROM study WHERE YEAR(date) = YEAR(CURDATE())
-        UNION ALL
-        SELECT date, price as total FROM other WHERE YEAR(date) = YEAR(CURDATE())
-      ) combined
-      GROUP BY MONTH(date)
-      ORDER BY MONTH(date)
-    `);
-    
-    // Recent transactions
-    const [recentTransactions] = await dbConnection.execute(`
-      SELECT * FROM (
-        SELECT 'Fuel' as type, date, total_cost as amount FROM fuel
-        UNION ALL
-        SELECT 'Service' as type, service_date as date, cost as amount FROM service
-        UNION ALL
-        SELECT 'Game' as type, date, price as amount FROM games
-        UNION ALL
-        SELECT 'Study' as type, date, amount FROM study
-        UNION ALL
-        SELECT type, date, price as amount FROM other
-      ) combined
+        total_cost as fuelAmount,
+        odometer as kmRun,
+        date
+      FROM fuel 
+      WHERE odometer > 0
       ORDER BY date DESC
       LIMIT 10
     `);
-
-    // Insurance data
-    const [insuranceData] = await dbConnection.execute(
-      'SELECT * FROM insurance WHERE end >= CURDATE() ORDER BY end ASC'
+    
+    // Last one added record from all tables
+    const [lastRecords] = await dbConnection.execute(`
+      SELECT 'Fuel' as type, entry_id as id, date as record_date, total_cost as amount FROM fuel
+      UNION ALL
+      SELECT 'Service' as type, service_id as id, service_date as record_date, cost as amount FROM service
+      UNION ALL
+      SELECT 'Game' as type, game_id as id, date as record_date, price as amount FROM games
+      UNION ALL
+      SELECT 'Study' as type, entry_id as id, date as record_date, amount FROM study
+      UNION ALL
+      SELECT 'Insurance' as type, insurance_id as id, start as record_date, amount FROM insurance
+      UNION ALL
+      SELECT type, entry_id as id, date as record_date, price as amount FROM other
+      ORDER BY record_date DESC
+      LIMIT 10
+    `);
+    
+    // Price/Cost distribution for bar chart (all-time totals)
+    const [fuelCost] = await dbConnection.execute(
+      'SELECT SUM(total_cost) as total FROM fuel'
+    );
+    const [serviceCost] = await dbConnection.execute(
+      'SELECT SUM(cost) as total FROM service'
+    );
+    const [gamesCost] = await dbConnection.execute(
+      'SELECT SUM(price) as total FROM games'
+    );
+    const [studyCost] = await dbConnection.execute(
+      'SELECT SUM(amount) as total FROM study'
+    );
+    const [otherCost] = await dbConnection.execute(
+      'SELECT SUM(price) as total FROM other'
+    );
+    const [insuranceCost] = await dbConnection.execute(
+      'SELECT SUM(amount) as total FROM insurance'
     );
     
     return {
       success: true,
       data: {
         totals: {
-          fuel: fuelTotal[0].total || 0,
-          service: serviceTotal[0].total || 0,
-          games: gamesTotal[0].total || 0,
-          study: studyTotal[0].total || 0,
-          other: otherTotal[0].total || 0
+          fuel: fuelCost[0].total || 0,
+          service: serviceCost[0].total || 0,
+          games: gamesCost[0].total || 0,
+          study: studyCost[0].total || 0,
+          other: otherCost[0].total || 0,
+          insurance: insuranceCost[0].total || 0
         },
-        monthlyData,
-        recentTransactions,
-        insuranceData
+        studyYearTotal: studyTotal[0].total || 0,
+        lastFuelDate: lastFuel[0].lastDate,
+        gamesCount: gamesStats[0].count || 0,
+        gamesTotalPrice: gamesStats[0].total || 0,
+        avgOdometerData,
+        lastRecords
       }
     };
   } catch (error) {
