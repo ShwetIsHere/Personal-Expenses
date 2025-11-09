@@ -1,0 +1,125 @@
+mysql> show tables
+    -> ;
++--------------------+
+| Tables_in_personal |
++--------------------+
+| fuel               |
+| games              |
+| insurance          |
+| login              |
+| other              |
+| platforms          |
+| service            |
+| study              |
+| vehicle            |
++--------------------+
+
+mysql> desc fuel;
++------------+---------------+------+-----+---------+----------------+
+| Field      | Type          | Null | Key | Default | Extra          |
++------------+---------------+------+-----+---------+----------------+
+| entry_id   | int           | NO   | PRI | NULL    | auto_increment |
+| date       | date          | YES  |     | NULL    |                |
+| total_cost | decimal(10,2) | YES  |     | NULL    |                |
+| odometer   | int           | YES  |     | NULL    |                |
++------------+---------------+------+-----+---------+----------------+
+
+mysql> desc games;
++----------+---------------+------+-----+---------+----------------+
+| Field    | Type          | Null | Key | Default | Extra          |
++----------+---------------+------+-----+---------+----------------+
+| game_id  | int           | NO   | PRI | NULL    | auto_increment |
+| title    | varchar(100)  | YES  |     | NULL    |                |
+| platform | varchar(50)   | YES  |     | NULL    |                |
+| date     | date          | YES  |     | NULL    |                |
+| price    | decimal(10,2) | YES  |     | NULL    |                |
++----------+---------------+------+-----+---------+----------------+
+
+mysql> desc insurance;
++--------------+---------------+------+-----+---------+----------------+
+| Field        | Type          | Null | Key | Default | Extra          |
++--------------+---------------+------+-----+---------+----------------+
+| insurance_id | int           | NO   | PRI | NULL    | auto_increment |
+| name         | varchar(50)   | YES  |     | NULL    |                |
+| company      | varchar(50)   | YES  |     | NULL    |                |
+| policy_no    | varchar(50)   | YES  |     | NULL    |                |
+| start        | date          | YES  |     | NULL    |                |
+| end          | date          | YES  |     | NULL    |                |
+| amount       | decimal(10,2) | YES  |     | NULL    |                |
+| type         | varchar(30)   | YES  |     | NULL    |                |
+| renew_date   | date          | YES  |     | NULL    |                |
++--------------+---------------+------+-----+---------+----------------+
+
+mysql> desc login;
++-------------+-------------+------+-----+---------+-------+
+| Field       | Type        | Null | Key | Default | Extra |
++-------------+-------------+------+-----+---------+-------+
+| uname       | varchar(20) | NO   | PRI | NULL    |       |
+| pass        | varchar(50) | YES  |     | NULL    |       |
+| profile_pic | longblob    | YES  |     | NULL    |       |
++-------------+-------------+------+-----+---------+-------+
+
+mysql> desc other;
++----------+---------------+------+-----+---------+----------------+
+| Field    | Type          | Null | Key | Default | Extra          |
++----------+---------------+------+-----+---------+----------------+
+| entry_id | int           | NO   | PRI | NULL    | auto_increment |
+| type     | varchar(50)   | YES  |     | NULL    |                |
+| price    | decimal(10,2) | YES  |     | NULL    |                |
+| date     | date          | YES  |     | NULL    |                |
++----------+---------------+------+-----+---------+----------------+
+
+mysql> desc platforms; 
++------------------+--------------+------+-----+---------+----------------+
+| Field            | Type         | Null | Key | Default | Extra          |
++------------------+--------------+------+-----+---------+----------------+
+| platform_id      | int          | NO   | PRI | NULL    | auto_increment |
+| platform_name    | varchar(50)  | YES  |     | NULL    |                |
+| account_username | varchar(50)  | YES  |     | NULL    |                |
+| account_email    | varchar(100) | YES  |     | NULL    |                |
++------------------+--------------+------+-----+---------+----------------+
+
+mysql> desc service;
++--------------+---------------+------+-----+---------+----------------+
+| Field        | Type          | Null | Key | Default | Extra          |
++--------------+---------------+------+-----+---------+----------------+
+| service_id   | int           | NO   | PRI | NULL    | auto_increment |
+| name         | varchar(50)   | YES  |     | NULL    |                |
+| service_date | date          | YES  |     | NULL    |                |
+| odometer     | int           | YES  |     | NULL    |                |
+| service_type | varchar(50)   | YES  |     | NULL    |                |
+| cost         | decimal(10,2) | YES  |     | NULL    |                |
++--------------+---------------+------+-----+---------+----------------+
+
+mysql> desc study;
++----------+---------------+------+-----+---------+----------------+
+| Field    | Type          | Null | Key | Default | Extra          |
++----------+---------------+------+-----+---------+----------------+
+| entry_id | int           | NO   | PRI | NULL    | auto_increment |
+| title    | varchar(100)  | YES  |     | NULL    |                |
+| amount   | decimal(10,2) | YES  |     | NULL    |                |
+| date     | date          | YES  |     | NULL    |                |
++----------+---------------+------+-----+---------+----------------+
+
+
+mysql> desc vehicle;
++---------------------+-------------+------+-----+---------+----------------+
+| Field               | Type        | Null | Key | Default | Extra          |
++---------------------+-------------+------+-----+---------+----------------+
+| vehicle_id          | int         | NO   | PRI | NULL    | auto_increment |
+| registration_number | varchar(50) | YES  |     | NULL    |                |
+| owner_name          | varchar(50) | YES  |     | NULL    |                |
+| chassis_number      | varchar(20) | YES  |     | NULL    |                |
++---------------------+-------------+------+-----+---------+----------------+
+
+
+this is my sql tables and here i give you quick summary what is this tables
+--> vehicle section has this tables: -> insurance, service, fuel, vehicle
+--> game section has this tables: -> games, platforms
+--> study section has this tables: -> study
+--> other section has this tables: -> other
+--> login section has this table: -> login 
+
+database name: personal
+database password: shwet
+
