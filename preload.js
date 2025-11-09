@@ -20,5 +20,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteRecord: (table, id, idField) => ipcRenderer.invoke('delete-record', table, id, idField),
   
   // Authentication
-  authenticate: (username, password) => ipcRenderer.invoke('authenticate', username, password)
+  authenticate: (username, password) => ipcRenderer.invoke('authenticate', username, password),
+  getUserProfile: (username) => ipcRenderer.invoke('get-user-profile', username),
+  updatePassword: (username, oldPassword, newPassword) => ipcRenderer.invoke('update-password', username, oldPassword, newPassword),
+  updateProfilePicture: (username, imageBuffer) => ipcRenderer.invoke('update-profile-picture', username, imageBuffer)
 });

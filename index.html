@@ -31,28 +31,61 @@
 
   <!-- Login Screen -->
   <div id="login-screen" class="login-container">
+    <!-- Animated Background -->
+    <div class="login-bg">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+    </div>
+    
+    <!-- Login Box -->
     <div class="login-box">
-      <div class="login-icon">
-        <i class="fas fa-wallet"></i>
+      <div class="login-header">
+        <div class="login-icon">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <h1 class="login-title">Welcome Back</h1>
+        <p class="login-subtitle">Sign in to manage your finances</p>
       </div>
-      <h1>Welcome to FIQ</h1>
-      <p class="login-subtitle">Your Personal Finance Manager</p>
       
       <form id="login-form" class="login-form">
-        <div class="input-group">
-          <i class="fas fa-user"></i>
-          <input type="text" id="username" placeholder="Username" required>
+        <div class="floating-input">
+          <input type="text" id="username" required>
+          <label for="username">
+            <i class="fas fa-user"></i> Username
+          </label>
+          <span class="input-border"></span>
         </div>
-        <div class="input-group">
-          <i class="fas fa-lock"></i>
-          <input type="password" id="password" placeholder="Password" required>
+        
+        <div class="floating-input">
+          <input type="password" id="password" required>
+          <label for="password">
+            <i class="fas fa-lock"></i> Password
+          </label>
+          <span class="input-border"></span>
         </div>
-        <button type="submit" class="btn-primary">
-          <span>Sign In</span>
-          <i class="fas fa-arrow-right"></i>
+        
+        <button type="submit" class="btn-login">
+          <span class="btn-text">Sign In</span>
+          <span class="btn-ripple"></span>
         </button>
+        
         <div id="login-error" class="login-error"></div>
       </form>
+      
+      <div class="login-footer">
+        <p>
+          <i class="fas fa-coins"></i> 
+          <strong>FIQ</strong> - Your Personal Finance Manager
+        </p>
+      </div>
     </div>
   </div>
 

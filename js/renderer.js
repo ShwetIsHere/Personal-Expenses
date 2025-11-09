@@ -28,6 +28,13 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   if (result.success) {
     currentUser = result.user;
     document.getElementById('user-name').textContent = username;
+    
+    // Set profile picture if exists
+    if (result.user.profilePic) {
+      const userAvatar = document.querySelector('.user-avatar');
+      userAvatar.innerHTML = `<img src="data:image/jpeg;base64,${result.user.profilePic}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+    }
+    
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     loadPage('dashboard');

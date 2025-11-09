@@ -326,15 +326,89 @@ ipcMain.handle('delete-record', async (event, table, id, idField) => {
 ipcMain.handle('authenticate', async (event, username, password) => {
   try {
     const [users] = await dbConnection.execute(
-      'SELECT * FROM login WHERE uname = ? AND pass = ?',
+      'SELECT uname, profile_pic FROM login WHERE uname = ? AND pass = ?',
       [username, password]
     );
     
     if (users.length > 0) {
-      return { success: true, user: { username: users[0].uname } };
+      const user = users[0];
+      // Convert BLOB to base64 if profile_pic exists
+      const profilePic = user.profile_pic ? user.profile_pic.toString('base64') : null;
+      return { 
+        success: true, 
+        user: { 
+          username: user.uname,
+          profilePic: profilePic
+        } 
+      };
     } else {
       return { success: false, error: 'Invalid credentials' };
     }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Get user profile
+ipcMain.handle('get-user-profile', async (event, username) => {
+  try {
+    const [users] = await dbConnection.execute(
+      'SELECT uname, profile_pic FROM login WHERE uname = ?',
+      [username]
+    );
+    
+    if (users.length > 0) {
+      const user = users[0];
+      const profilePic = user.profile_pic ? user.profile_pic.toString('base64') : null;
+      return { 
+        success: true, 
+        user: { 
+          username: user.uname,
+          profilePic: profilePic
+        } 
+      };
+    } else {
+      return { success: false, error: 'User not found' };
+    }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Update password
+ipcMain.handle('update-password', async (event, username, oldPassword, newPassword) => {
+  try {
+    // First verify old password
+    const [users] = await dbConnection.execute(
+      'SELECT * FROM login WHERE uname = ? AND pass = ?',
+      [username, oldPassword]
+    );
+    
+    if (users.length === 0) {
+      return { success: false, error: 'Current password is incorrect' };
+    }
+    
+    // Update password
+    await dbConnection.execute(
+      'UPDATE login SET pass = ? WHERE uname = ?',
+      [newPassword, username]
+    );
+    
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Update profile picture
+ipcMain.handle('update-profile-picture', async (event, username, imageBuffer) => {
+  try {
+    await dbConnection.execute(
+      'UPDATE login SET profile_pic = ? WHERE uname = ?',
+      [imageBuffer, username]
+    );
+    
+    return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }
