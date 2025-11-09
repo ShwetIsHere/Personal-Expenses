@@ -1,15 +1,25 @@
 {
-  "name": "personal",
+  "name": "fiq-finance-manager",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A modern personal finance management application built with Electron and MySQL",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "dev": "electron . --enable-logging",
+    "build": "electron-builder"
   },
-  "keywords": [],
+  "keywords": [
+    "finance",
+    "expense-tracker",
+    "mysql",
+    "electron"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "dependencies": {
+    "mysql2": "^3.15.3"
+  },
   "devDependencies": {
     "electron": "^39.1.1"
   }

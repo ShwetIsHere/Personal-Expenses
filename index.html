@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIQ - Personal Finance Manager</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Custom Title Bar -->
+  <div class="titlebar">
+    <div class="titlebar-drag-region">
+      <div class="titlebar-icon">
+        <i class="fas fa-coins"></i>
+      </div>
+      <div class="titlebar-title">FIQ - Personal Finance Manager</div>
+    </div>
+    <div class="window-controls">
+      <button class="window-control" id="minimize-btn">
+        <i class="fas fa-window-minimize"></i>
+      </button>
+      <button class="window-control" id="maximize-btn">
+        <i class="fas fa-window-maximize"></i>
+      </button>
+      <button class="window-control close-btn" id="close-btn">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-container">
+    <div class="login-box">
+      <div class="login-icon">
+        <i class="fas fa-wallet"></i>
+      </div>
+      <h1>Welcome to FIQ</h1>
+      <p class="login-subtitle">Your Personal Finance Manager</p>
+      
+      <form id="login-form" class="login-form">
+        <div class="input-group">
+          <i class="fas fa-user"></i>
+          <input type="text" id="username" placeholder="Username" required>
+        </div>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn-primary">
+          <span>Sign In</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+        <div id="login-error" class="login-error"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App Container -->
+  <div id="app-container" class="app-container" style="display: none;">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="user-profile">
+          <div class="user-avatar">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="user-info">
+            <h3 id="user-name">User</h3>
+            <p class="user-status">Online</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <i class="fas fa-chart-line"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-page="vehicle">
+          <i class="fas fa-car"></i>
+          <span>Vehicle</span>
+        </a>
+        <a href="#" class="nav-item" data-page="games">
+          <i class="fas fa-gamepad"></i>
+          <span>Games</span>
+        </a>
+        <a href="#" class="nav-item" data-page="study">
+          <i class="fas fa-graduation-cap"></i>
+          <span>Study</span>
+        </a>
+        <a href="#" class="nav-item" data-page="other">
+          <i class="fas fa-receipt"></i>
+          <span>Other Expenses</span>
+        </a>
+        <a href="#" class="nav-item" data-page="settings">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-logout" id="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div id="page-content"></div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/vehicle.js"></script>
+  <script src="js/games.js"></script>
+  <script src="js/study.js"></script>
+  <script src="js/other.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>
