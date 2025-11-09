@@ -97,7 +97,7 @@ async function renderVehicle(container) {
                     <td style="color: var(--primary);">${kmDone}</td>
                     <td class="text-success">${formatCurrency(item.total_cost)}</td>
                     <td>
-                      <button class="btn btn-edit" onclick="editFuel(${item.entry_id}, '${formatDate(item.date)}', ${item.odometer || 0}, ${item.total_cost})">
+                      <button class="btn btn-edit" onclick="editFuel(${item.entry_id}, '${item.date}', ${item.odometer || 0}, ${item.total_cost})">
                         <i class="fas fa-edit"></i>
                       </button>
                     </td>
@@ -147,7 +147,7 @@ async function renderVehicle(container) {
                     <td>${item.odometer ? item.odometer.toLocaleString() + ' km' : '-'}</td>
                     <td class="text-success">${formatCurrency(item.cost)}</td>
                     <td>
-                      <button class="btn btn-edit" onclick="editService(${item.service_id}, '${item.name}', '${formatDate(item.service_date)}', '${item.service_type}', ${item.odometer || 0}, ${item.cost})">
+                      <button class="btn btn-edit" onclick="editService(${item.service_id}, '${item.name}', '${item.service_date}', '${item.service_type}', ${item.odometer || 0}, ${item.cost})">
                         <i class="fas fa-edit"></i>
                       </button>
                     </td>
@@ -200,7 +200,7 @@ async function renderVehicle(container) {
                     <td>${formatDate(item.end)}</td>
                     <td class="text-warning">${formatCurrency(item.amount)}</td>
                     <td>
-                      <button class="btn btn-edit" onclick="editInsurance(${item.insurance_id}, '${item.name}', '${item.company}', '${item.policy_no}', '${item.type}', '${formatDate(item.start)}', '${formatDate(item.end)}', ${item.amount})">
+                      <button class="btn btn-edit" onclick="editInsurance(${item.insurance_id}, '${item.name}', '${item.company}', '${item.policy_no}', '${item.type}', '${item.start}', '${item.end}', ${item.amount})">
                         <i class="fas fa-edit"></i>
                       </button>
                     </td>

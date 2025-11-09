@@ -215,7 +215,7 @@ ipcMain.handle('get-vehicle-data', async () => {
 // Get games data
 ipcMain.handle('get-games-data', async () => {
   try {
-    const [games] = await dbConnection.execute('SELECT * FROM games ORDER BY date DESC');
+    const [games] = await dbConnection.execute('SELECT * FROM games ORDER BY game_id DESC');
     const [platforms] = await dbConnection.execute('SELECT * FROM platforms');
     
     return {

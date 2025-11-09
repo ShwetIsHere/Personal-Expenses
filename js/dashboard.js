@@ -217,7 +217,7 @@ function renderFuelKmChart(data) {
   
   // Prepare data - reverse to show oldest to newest
   const reversedData = [...data].reverse();
-  const labels = reversedData.map((item, index) => `Fill #${index + 1}`);
+  const labels = reversedData.map(item => formatDate(item.date));
   const fuelAmounts = reversedData.map(item => parseFloat(item.fuelAmount) || 0);
   const kmRuns = reversedData.map(item => parseFloat(item.kmRun) || 0);
   

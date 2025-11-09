@@ -135,7 +135,7 @@ async function renderGames(container) {
                     <td>${formatDate(game.date)}</td>
                     <td class="text-success">${formatCurrency(game.price)}</td>
                     <td>
-                      <button class="btn btn-edit" onclick="editGame(${game.game_id}, '${game.title}', '${game.platform}', '${formatDate(game.date)}', ${game.price})">
+                      <button class="btn btn-edit" onclick="editGame(${game.game_id}, '${game.title}', '${game.platform}', '${game.date}', ${game.price})">
                         <i class="fas fa-edit"></i>
                       </button>
                     </td>

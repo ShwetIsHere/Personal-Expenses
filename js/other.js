@@ -138,7 +138,7 @@ async function renderOther(container) {
                   <td>${formatDate(item.date)}</td>
                   <td class="text-warning" style="font-size: 18px; font-weight: 700;">${formatCurrency(item.price)}</td>
                   <td>
-                    <button class="btn btn-edit" onclick="editOther(${item.entry_id}, '${item.type}', '${formatDate(item.date)}', ${item.price})">
+                    <button class="btn btn-edit" onclick="editOther(${item.entry_id}, '${item.type}', '${item.date}', ${item.price})">
                       <i class="fas fa-edit"></i>
                     </button>
                   </td>
