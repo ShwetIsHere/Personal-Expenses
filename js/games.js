@@ -135,7 +135,7 @@ async function renderGames(container) {
                     <td>${formatDate(game.date)}</td>
                     <td class="text-success">${formatCurrency(game.price)}</td>
                     <td>
-                      <button class="btn btn-edit" onclick="editGame(${game.game_id}, '${game.title}', '${game.platform}', '${game.date}', ${game.price})">
+                      <button class="btn btn-edit" onclick="editGame(${game.game_id}, '${game.title}', '${game.platform}', '${formatDateForInput(game.date)}', ${game.price})">
                         <i class="fas fa-edit"></i>
                       </button>
                     </td>
@@ -205,6 +205,11 @@ async function showAddGameModal() {
   const data = await window.electronAPI.getGamesData();
   const platforms = data.data.platforms || [];
   
+  // Remove duplicate platforms by platform_name
+  const uniquePlatforms = platforms.filter((platform, index, self) =>
+    index === self.findIndex((p) => p.platform_name === platform.platform_name)
+  );
+  
   const modal = createModal('Add New Game', `
     <form id="gameForm">
       <div class="form-group">
@@ -215,7 +220,7 @@ async function showAddGameModal() {
         <label class="form-label">Platform</label>
         <select class="form-input" name="platform" required>
           <option value="">Select Platform</option>
-          ${platforms.map(p => `<option value="${p.platform_name}">${p.platform_name}</option>`).join('')}
+          ${uniquePlatforms.map(p => `<option value="${p.platform_name}">${p.platform_name}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
@@ -254,6 +259,11 @@ async function editGame(id, title, platform, date, price) {
   const data = await window.electronAPI.getGamesData();
   const platforms = data.data.platforms || [];
   
+  // Remove duplicate platforms by platform_name
+  const uniquePlatforms = platforms.filter((p, index, self) =>
+    index === self.findIndex((platform) => platform.platform_name === p.platform_name)
+  );
+  
   const modal = createModal('Edit Game', `
     <form id="gameEditForm">
       <div class="form-group">
@@ -264,7 +274,7 @@ async function editGame(id, title, platform, date, price) {
         <label class="form-label">Platform</label>
         <select class="form-input" name="platform" required>
           <option value="">Select Platform</option>
-          ${platforms.map(p => `<option value="${p.platform_name}" ${p.platform_name === platform ? 'selected' : ''}>${p.platform_name}</option>`).join('')}
+          ${uniquePlatforms.map(p => `<option value="${p.platform_name}" ${p.platform_name === platform ? 'selected' : ''}>${p.platform_name}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">

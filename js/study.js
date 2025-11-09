@@ -104,7 +104,7 @@ async function renderStudy(container) {
                   <td>${formatDate(item.date)}</td>
                   <td class="text-success" style="font-size: 18px; font-weight: 700;">${formatCurrency(item.amount)}</td>
                   <td>
-                    <button class="btn btn-edit" onclick="editStudy(${item.entry_id}, '${item.title}', '${item.date}', ${item.amount})">
+                    <button class="btn btn-edit" onclick="editStudy(${item.entry_id}, '${item.title}', '${formatDateForInput(item.date)}', ${item.amount})">
                       <i class="fas fa-edit"></i>
                     </button>
                   </td>

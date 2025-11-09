@@ -170,6 +170,25 @@ ipcMain.handle('get-dashboard-data', async () => {
       'SELECT SUM(amount) as total FROM insurance'
     );
     
+    // Monthly expense trend data (last 12 months)
+    const [monthlyExpenses] = await dbConnection.execute(`
+      SELECT 
+        DATE_FORMAT(date, '%Y-%m') as month,
+        SUM(CASE WHEN source = 'study' THEN amount ELSE 0 END) as study,
+        SUM(CASE WHEN source = 'games' THEN amount ELSE 0 END) as games,
+        SUM(CASE WHEN source = 'other' THEN amount ELSE 0 END) as other
+      FROM (
+        SELECT date, amount, 'study' as source FROM study
+        UNION ALL
+        SELECT date, price as amount, 'games' as source FROM games
+        UNION ALL
+        SELECT date, price as amount, 'other' as source FROM other
+      ) combined
+      WHERE date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+      GROUP BY DATE_FORMAT(date, '%Y-%m')
+      ORDER BY month ASC
+    `);
+    
     return {
       success: true,
       data: {
@@ -186,7 +205,8 @@ ipcMain.handle('get-dashboard-data', async () => {
         gamesCount: gamesStats[0].count || 0,
         gamesTotalPrice: gamesStats[0].total || 0,
         avgOdometerData,
-        lastRecords
+        lastRecords,
+        monthlyExpenses
       }
     };
   } catch (error) {

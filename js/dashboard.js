@@ -7,7 +7,7 @@ async function renderDashboard(container) {
     return;
   }
   
-  const { totals, studyYearTotal, lastFuelDate, gamesCount, gamesTotalPrice, avgOdometerData, lastRecords } = data.data;
+  const { totals, studyYearTotal, lastFuelDate, gamesCount, gamesTotalPrice, avgOdometerData, lastRecords, monthlyExpenses } = data.data;
   
   container.innerHTML = `
     <div class="page-header">
@@ -88,6 +88,21 @@ async function renderDashboard(container) {
           <div class="chart-container">
             <canvas id="priceDistributionChart"></canvas>
           </div>
+        </div>
+      </div>
+      
+      <!-- Monthly Expense Trend Chart -->
+      <div class="card" style="margin-bottom: 32px;">
+        <div class="card-header">
+          <h3 class="card-title">
+            <div class="card-icon" style="background: var(--gradient-3)">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            Monthly Expense Trend (Last 12 Months)
+          </h3>
+        </div>
+        <div class="chart-container">
+          <canvas id="monthlyExpenseChart"></canvas>
         </div>
       </div>
       
@@ -184,6 +199,7 @@ async function renderDashboard(container) {
   // Render charts
   renderFuelKmChart(avgOdometerData);
   renderPriceDistributionChart(totals);
+  renderMonthlyExpenseChart(monthlyExpenses);
 }
 
 // Helper functions for icons and gradients
@@ -405,6 +421,121 @@ function renderPriceDistributionChart(totals) {
           title: {
             display: true,
             text: 'Total Spent (₹)',
+            color: '#9ca3af'
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderMonthlyExpenseChart(data) {
+  const ctx = document.getElementById('monthlyExpenseChart');
+  if (!ctx) return;
+  
+  // Prepare data
+  const labels = data.map(item => {
+    const [year, month] = item.month.split('-');
+    const date = new Date(year, month - 1);
+    return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+  });
+  
+  const studyData = data.map(item => parseFloat(item.study) || 0);
+  const gamesData = data.map(item => parseFloat(item.games) || 0);
+  const otherData = data.map(item => parseFloat(item.other) || 0);
+  
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Study',
+        data: studyData,
+        borderColor: '#14b8a6',
+        backgroundColor: 'rgba(20, 184, 166, 0.1)',
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#14b8a6',
+        fill: true
+      }, {
+        label: 'Games',
+        data: gamesData,
+        borderColor: '#ec4899',
+        backgroundColor: 'rgba(236, 72, 153, 0.1)',
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#ec4899',
+        fill: true
+      }, {
+        label: 'Other',
+        data: otherData,
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#f59e0b',
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            color: '#9ca3af',
+            usePointStyle: true,
+            padding: 15
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(35, 41, 56, 0.95)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#667eea',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            color: '#9ca3af',
+            maxRotation: 45,
+            minRotation: 45
+          }
+        },
+        y: {
+          grid: {
+            color: 'rgba(255, 255, 255, 0.05)',
+            borderDash: [5, 5]
+          },
+          ticks: {
+            color: '#9ca3af',
+            callback: function(value) {
+              return '₹' + (value / 1000).toFixed(0) + 'k';
+            }
+          },
+          title: {
+            display: true,
+            text: 'Amount Spent (₹)',
             color: '#9ca3af'
           }
         }
