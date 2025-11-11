@@ -67,7 +67,7 @@ async function renderDashboard(container) {
               <div class="card-icon" style="background: var(--gradient-1)">
                 <i class="fas fa-tachometer-alt"></i>
               </div>
-              Fuel Amount vs KM Run
+              Fuel Amount vs KM Done
             </h3>
           </div>
           <div class="chart-container">
@@ -235,7 +235,7 @@ function renderFuelKmChart(data) {
   const reversedData = [...data].reverse();
   const labels = reversedData.map(item => formatDate(item.date));
   const fuelAmounts = reversedData.map(item => parseFloat(item.fuelAmount) || 0);
-  const kmRuns = reversedData.map(item => parseFloat(item.kmRun) || 0);
+  const kmDone = reversedData.map(item => parseFloat(item.kmDone) || 0);
   
   new Chart(ctx, {
     type: 'line',
@@ -252,8 +252,8 @@ function renderFuelKmChart(data) {
         pointBackgroundColor: '#667eea',
         yAxisID: 'y'
       }, {
-        label: 'KM Run',
-        data: kmRuns,
+        label: 'KM Done',
+        data: kmDone,
         borderColor: '#ec4899',
         backgroundColor: 'rgba(236, 72, 153, 0.1)',
         borderWidth: 2,
@@ -332,7 +332,7 @@ function renderFuelKmChart(data) {
           },
           title: {
             display: true,
-            text: 'KM Run',
+            text: 'KM Done',
             color: '#ec4899'
           }
         }

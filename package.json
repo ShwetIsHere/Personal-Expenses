@@ -6,7 +6,9 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --enable-logging",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "build:win": "electron-builder --win --x64",
+    "package": "electron-packager . \"FIQ Finance Manager\" --platform=win32 --arch=x64 --out=dist --overwrite --asar --icon=assets/icon.ico"
   },
   "keywords": [
     "finance",
@@ -17,10 +19,34 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "build": {
+    "appId": "com.fiq.finance-manager",
+    "productName": "FIQ Finance Manager",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable",
+      "icon": "assets/icon.ico",
+      "sign": null,
+      "signingHashAlgorithms": []
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "js/**/*",
+      "styles/**/*",
+      "assets/**/*",
+      "node_modules/**/*"
+    ]
+  },
   "dependencies": {
     "mysql2": "^3.15.3"
   },
   "devDependencies": {
-    "electron": "^39.1.1"
+    "electron": "^39.1.1",
+    "electron-builder": "^24.13.3",
+    "electron-packager": "^17.1.2"
   }
 }

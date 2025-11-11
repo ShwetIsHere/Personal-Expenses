@@ -121,15 +121,22 @@ ipcMain.handle('get-dashboard-data', async () => {
       'SELECT SUM(price) as total FROM other WHERE YEAR(date) = YEAR(CURDATE())'
     );
     
-    // Average vehicle cost based on odometer (km/rupee efficiency)
+    // Average vehicle cost based on odometer and KM done
     const [avgOdometerData] = await dbConnection.execute(`
       SELECT 
-        total_cost as fuelAmount,
-        odometer as kmRun,
-        date
-      FROM fuel 
-      WHERE odometer > 0
-      ORDER BY date DESC
+        f1.total_cost as fuelAmount,
+        f1.odometer as kmRun,
+        f1.date,
+        COALESCE(f1.odometer - f2.odometer, 0) as kmDone
+      FROM fuel f1
+      LEFT JOIN fuel f2 ON f2.date = (
+        SELECT date FROM fuel 
+        WHERE date < f1.date AND odometer > 0
+        ORDER BY date DESC 
+        LIMIT 1
+      )
+      WHERE f1.odometer > 0
+      ORDER BY f1.date DESC
       LIMIT 10
     `);
     
