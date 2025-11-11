@@ -20,10 +20,15 @@ async function renderOther(container) {
   other.forEach(item => {
     const type = item.type || 'Uncategorized';
     if (!typeStats[type]) {
-      typeStats[type] = { count: 0, total: 0 };
+      typeStats[type] = { count: 0, total: 0, yearTotal: 0 };
     }
     typeStats[type].count++;
     typeStats[type].total += parseFloat(item.price || 0);
+    
+    // Add to year total if from current year
+    if (new Date(item.date).getFullYear() === currentYear) {
+      typeStats[type].yearTotal += parseFloat(item.price || 0);
+    }
   });
   
   container.innerHTML = `
@@ -84,16 +89,27 @@ async function renderOther(container) {
         ${Object.entries(typeStats).map(([type, stats]) => `
           <div class="card">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-              <div class="card-icon" style="background: var(--gradient-5)">
-                <i class="fas fa-tag"></i>
+              <div class="card-icon" style="background: var(${getTypeGradient(type)})">
+                <i class="${getTypeIcon(type)}"></i>
               </div>
-              <div>
+              <div style="flex: 1;">
                 <h3 style="font-size: 18px; font-weight: 600;">${type}</h3>
                 <p style="color: var(--text-muted); font-size: 13px;">${stats.count} entries</p>
               </div>
             </div>
-            <div style="font-size: 24px; font-weight: 700; color: var(--accent-5);">
-              ${formatCurrency(stats.total)}
+            <div style="margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 13px; color: var(--text-muted);">All Time</span>
+                <span style="font-size: 20px; font-weight: 700; color: var(--accent-5);">
+                  ${formatCurrency(stats.total)}
+                </span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: var(--text-muted);">${currentYear}</span>
+                <span style="font-size: 16px; font-weight: 600; color: var(--accent-4);">
+                  ${formatCurrency(stats.yearTotal)}
+                </span>
+              </div>
             </div>
           </div>
         `).join('')}
@@ -116,6 +132,7 @@ async function renderOther(container) {
               <tr>
                 <th>ID</th>
                 <th>Type</th>
+                <th>Topic</th>
                 <th>Date</th>
                 <th>Amount</th>
                 <th>Actions</th>
@@ -126,19 +143,24 @@ async function renderOther(container) {
                 <tr>
                   <td style="font-weight: 600;">#${item.entry_id}</td>
                   <td>
+                    <span class="badge badge-${getBadgeClass(item.type)}" style="font-size: 13px; padding: 6px 12px;">
+                      ${item.type || 'Uncategorized'}
+                    </span>
+                  </td>
+                  <td>
                     <div style="display: flex; align-items: center; gap: 12px;">
-                      <div class="card-icon" style="background: var(--gradient-5); width: 40px; height: 40px; font-size: 16px;">
-                        <i class="fas fa-shopping-bag"></i>
+                      <div class="card-icon" style="background: var(${getTypeGradient(item.type)}); width: 40px; height: 40px; font-size: 16px;">
+                        <i class="${getTypeIcon(item.type)}"></i>
                       </div>
                       <div>
-                        <div style="font-weight: 600; font-size: 15px;">${item.type || 'Uncategorized'}</div>
+                        <div style="font-weight: 600; font-size: 15px;">${item.topic || 'N/A'}</div>
                       </div>
                     </div>
                   </td>
                   <td>${formatDate(item.date)}</td>
                   <td class="text-warning" style="font-size: 18px; font-weight: 700;">${formatCurrency(item.price)}</td>
                   <td>
-                    <button class="btn btn-edit" onclick="editOther(${item.entry_id}, '${item.type}', '${formatDateForInput(item.date)}', ${item.price})">
+                    <button class="btn btn-edit" onclick="editOther(${item.entry_id}, '${item.type || ''}', '${item.topic || ''}', '${formatDateForInput(item.date)}', ${item.price})">
                       <i class="fas fa-edit"></i>
                     </button>
                   </td>
@@ -157,16 +179,32 @@ function showAddOtherModal() {
   const modal = createModal('Add Other Expense', `
     <form id="otherForm">
       <div class="form-group">
-        <label class="form-label">Expense Type</label>
-        <input type="text" class="form-input" name="type" required placeholder="e.g., Shopping, Entertainment, Bills">
+        <label class="form-label">Expense Type *</label>
+        <select class="form-input" name="type" required>
+          <option value="">Select Type</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Food">Food</option>
+          <option value="Trip">Trip</option>
+          <option value="Recharge">Recharge</option>
+          <option value="Grocery">Grocery</option>
+          <option value="Shopping">Shopping</option>
+          <option value="Medical">Medical</option>
+          <option value="Bills">Bills</option>
+          <option value="Transport">Transport</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Date</label>
+        <label class="form-label">Topic/Description</label>
+        <input type="text" class="form-input" name="topic" placeholder="e.g., Movie tickets, Restaurant, etc.">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date *</label>
         <input type="date" class="form-input" name="date" required value="${new Date().toISOString().split('T')[0]}">
       </div>
       <div class="form-group">
-        <label class="form-label">Price (₹)</label>
-        <input type="number" step="0.01" class="form-input" name="price" required>
+        <label class="form-label">Price (₹) *</label>
+        <input type="number" step="0.01" class="form-input" name="price" required placeholder="0.00">
       </div>
       <div class="modal-actions">
         <button type="submit" class="btn btn-primary">Save</button>
@@ -191,19 +229,35 @@ function showAddOtherModal() {
   });
 }
 
-function editOther(id, type, date, price) {
+function editOther(id, type, topic, date, price) {
   const modal = createModal('Edit Other Expense', `
     <form id="otherEditForm">
       <div class="form-group">
-        <label class="form-label">Expense Type</label>
-        <input type="text" class="form-input" name="type" required value="${type}">
+        <label class="form-label">Expense Type *</label>
+        <select class="form-input" name="type" required>
+          <option value="">Select Type</option>
+          <option value="Entertainment" ${type === 'Entertainment' ? 'selected' : ''}>Entertainment</option>
+          <option value="Food" ${type === 'Food' ? 'selected' : ''}>Food</option>
+          <option value="Trip" ${type === 'Trip' ? 'selected' : ''}>Trip</option>
+          <option value="Recharge" ${type === 'Recharge' ? 'selected' : ''}>Recharge</option>
+          <option value="Grocery" ${type === 'Grocery' ? 'selected' : ''}>Grocery</option>
+          <option value="Shopping" ${type === 'Shopping' ? 'selected' : ''}>Shopping</option>
+          <option value="Medical" ${type === 'Medical' ? 'selected' : ''}>Medical</option>
+          <option value="Bills" ${type === 'Bills' ? 'selected' : ''}>Bills</option>
+          <option value="Transport" ${type === 'Transport' ? 'selected' : ''}>Transport</option>
+          <option value="Other" ${type === 'Other' ? 'selected' : ''}>Other</option>
+        </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Date</label>
+        <label class="form-label">Topic/Description</label>
+        <input type="text" class="form-input" name="topic" value="${topic}" placeholder="e.g., Movie tickets, Restaurant, etc.">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date *</label>
         <input type="date" class="form-input" name="date" required value="${date}">
       </div>
       <div class="form-group">
-        <label class="form-label">Price (₹)</label>
+        <label class="form-label">Price (₹) *</label>
         <input type="number" step="0.01" class="form-input" name="price" required value="${price}">
       </div>
       <div class="modal-actions">
@@ -254,4 +308,55 @@ function closeModal() {
   if (modal) {
     modal.remove();
   }
+}
+
+// Helper function to get badge class based on expense type
+function getBadgeClass(type) {
+  const badgeMap = {
+    'Entertainment': 'primary',
+    'Food': 'success',
+    'Trip': 'info',
+    'Recharge': 'warning',
+    'Grocery': 'success',
+    'Shopping': 'primary',
+    'Medical': 'error',
+    'Bills': 'warning',
+    'Transport': 'info',
+    'Other': 'secondary'
+  };
+  return badgeMap[type] || 'secondary';
+}
+
+// Helper function to get icon based on expense type
+function getTypeIcon(type) {
+  const iconMap = {
+    'Entertainment': 'fas fa-film',
+    'Food': 'fas fa-utensils',
+    'Trip': 'fas fa-plane',
+    'Recharge': 'fas fa-mobile-alt',
+    'Grocery': 'fas fa-shopping-cart',
+    'Shopping': 'fas fa-shopping-bag',
+    'Medical': 'fas fa-heartbeat',
+    'Bills': 'fas fa-file-invoice-dollar',
+    'Transport': 'fas fa-bus',
+    'Other': 'fas fa-receipt'
+  };
+  return iconMap[type] || 'fas fa-receipt';
+}
+
+// Helper function to get gradient based on expense type
+function getTypeGradient(type) {
+  const gradientMap = {
+    'Entertainment': '--gradient-1',
+    'Food': '--gradient-4',
+    'Trip': '--gradient-3',
+    'Recharge': '--gradient-5',
+    'Grocery': '--gradient-4',
+    'Shopping': '--gradient-2',
+    'Medical': '--gradient-2',
+    'Bills': '--gradient-5',
+    'Transport': '--gradient-3',
+    'Other': '--gradient-1'
+  };
+  return gradientMap[type] || '--gradient-1';
 }
