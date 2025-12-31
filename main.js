@@ -15,7 +15,7 @@ const dbConfig = {
 
 // Create main window
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  const windowConfig = {
     width: 1400,
     height: 900,
     minWidth: 1200,
@@ -26,9 +26,17 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
-    },
-    icon: path.join(__dirname, 'assets', 'icon.png')
-  });
+    }
+  };
+  
+  // Add icon only if file exists
+  const iconPath = path.join(__dirname, 'assets', 'icon.png');
+  const fs = require('fs');
+  if (fs.existsSync(iconPath)) {
+    windowConfig.icon = iconPath;
+  }
+
+  mainWindow = new BrowserWindow(windowConfig);
 
   mainWindow.loadFile('index.html');
   
