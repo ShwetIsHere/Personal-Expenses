@@ -6,9 +6,10 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --enable-logging",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win --x64",
-    "package": "electron-packager . \"FIQ Finance Manager\" --platform=win32 --arch=x64 --out=dist --overwrite --asar --icon=assets/icon.ico"
+    "build": "electron-builder --win --x64",
+    "build:portable": "electron-builder --win portable --x64",
+    "build:installer": "electron-builder --win nsis --x64",
+    "dist": "electron-builder"
   },
   "keywords": [
     "finance",
@@ -21,15 +22,34 @@
   "type": "commonjs",
   "build": {
     "appId": "com.fiq.finance-manager",
-    "productName": "FIQ Finance Manager",
+    "productName": "Shwet",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "assets"
     },
     "win": {
-      "target": "portable",
-      "icon": "assets/icon.ico",
-      "sign": null,
-      "signingHashAlgorithms": []
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        },
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "signAndEditExecutable": false,
+      "sign": null
+    },
+    "portable": {
+      "artifactName": "Shwet.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Shwet-Setup.exe",
+      "deleteAppDataOnUninstall": false
     },
     "files": [
       "main.js",
@@ -38,7 +58,18 @@
       "js/**/*",
       "styles/**/*",
       "assets/**/*",
-      "node_modules/**/*"
+      "!assets/README.md",
+      "node_modules/**/*",
+      "!node_modules/**/test/**/*",
+      "!node_modules/**/tests/**/*",
+      "!node_modules/**/*.md"
+    ],
+    "extraResources": [
+      {
+        "from": "assets",
+        "to": "assets",
+        "filter": ["**/*"]
+      }
     ]
   },
   "dependencies": {
