@@ -126,6 +126,12 @@ async function renderOther(container) {
             <i class="fas fa-plus"></i> Add Expense
           </button>
         </div>
+        <div style="padding: 20px; padding-bottom: 0;">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="other-search" class="search-input" placeholder="Search expenses by type, topic, date, or amount..." onkeyup="filterOtherTable()">
+          </div>
+        </div>
         <div class="table-container">
           <table>
             <thead>
@@ -359,4 +365,28 @@ function getTypeGradient(type) {
     'Other': '--gradient-1'
   };
   return gradientMap[type] || '--gradient-1';
+}
+
+// Search filter function for other expenses table
+function filterOtherTable() {
+  const input = document.getElementById('other-search');
+  const filter = input.value.toLowerCase();
+  const table = document.querySelector('.card table tbody');
+  const rows = table.getElementsByTagName('tr');
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const type = row.cells[1]?.textContent || '';
+    const topic = row.cells[2]?.textContent || '';
+    const date = row.cells[3]?.textContent || '';
+    const amount = row.cells[4]?.textContent || '';
+    
+    const searchText = (type + topic + date + amount).toLowerCase();
+    
+    if (searchText.includes(filter)) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  }
 }

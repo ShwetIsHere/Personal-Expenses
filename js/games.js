@@ -114,6 +114,12 @@ async function renderGames(container) {
               <i class="fas fa-plus"></i> Add Game
             </button>
           </div>
+          <div style="padding: 20px; padding-bottom: 0;">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="games-search" class="search-input" placeholder="Search games by title, platform, or price..." onkeyup="filterGamesTable()">
+            </div>
+          </div>
           <div class="table-container">
             <table>
               <thead>
@@ -161,7 +167,13 @@ async function renderGames(container) {
               <i class="fas fa-plus"></i> Add Platform
             </button>
           </div>
-          <div class="grid grid-2" style="gap: 24px; padding: 20px;">
+          <div style="padding: 20px; padding-bottom: 10px;">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="platforms-search" class="search-input" placeholder="Search platforms by name, username, or email..." onkeyup="filterPlatformsGrid()">
+            </div>
+          </div>
+          <div class="grid grid-2" id="platforms-grid" style="gap: 24px; padding: 20px;">
             ${platforms.map(platform => `
               <div class="card" style="background: var(--secondary-bg);">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
@@ -220,6 +232,12 @@ async function showAddGameModal() {
         <label class="form-label">Platform</label>
         <select class="form-input" name="platform" required>
           <option value="">Select Platform</option>
+          <option value="Steam">Steam</option>
+          <option value="Epic Games">Epic Games</option>
+          <option value="Gog">Gog</option>
+          <option value="PlayStation">PlayStation</option>
+          <option value="Xbox">Xbox</option>
+          <option value="Nintendo">Nintendo</option>
           ${uniquePlatforms.map(p => `<option value="${p.platform_name}">${p.platform_name}</option>`).join('')}
         </select>
       </div>
@@ -274,6 +292,12 @@ async function editGame(id, title, platform, date, price) {
         <label class="form-label">Platform</label>
         <select class="form-input" name="platform" required>
           <option value="">Select Platform</option>
+          <option value="Steam" ${platform === 'Steam' ? 'selected' : ''}>Steam</option>
+          <option value="Epic Games" ${platform === 'Epic Games' ? 'selected' : ''}>Epic Games</option>
+          <option value="Gog" ${platform === 'Gog' ? 'selected' : ''}>Gog</option>
+          <option value="PlayStation" ${platform === 'PlayStation' ? 'selected' : ''}>PlayStation</option>
+          <option value="Xbox" ${platform === 'Xbox' ? 'selected' : ''}>Xbox</option>
+          <option value="Nintendo" ${platform === 'Nintendo' ? 'selected' : ''}>Nintendo</option>
           ${uniquePlatforms.map(p => `<option value="${p.platform_name}" ${p.platform_name === platform ? 'selected' : ''}>${p.platform_name}</option>`).join('')}
         </select>
       </div>
@@ -314,7 +338,7 @@ function showAddPlatformModal() {
     <form id="platformForm">
       <div class="form-group">
         <label class="form-label">Platform Name</label>
-        <input type="text" class="form-input" name="platform_name" required placeholder="e.g., PlayStation, Xbox, Steam">
+        <input type="text" class="form-input" name="platform_name" required placeholder="e.g., Steam, Gog, PlayStation, Xbox">
       </div>
       <div class="form-group">
         <label class="form-label">Account Username</label>
@@ -409,5 +433,48 @@ function closeModal() {
   const modal = document.getElementById('current-modal');
   if (modal) {
     modal.remove();
+  }
+}
+
+// Search filter function for games table
+function filterGamesTable() {
+  const input = document.getElementById('games-search');
+  const filter = input.value.toLowerCase();
+  const table = document.querySelector('#games-tab table tbody');
+  const rows = table.getElementsByTagName('tr');
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const title = row.cells[1]?.textContent || '';
+    const platform = row.cells[2]?.textContent || '';
+    const date = row.cells[3]?.textContent || '';
+    const price = row.cells[4]?.textContent || '';
+    
+    const searchText = (title + platform + date + price).toLowerCase();
+    
+    if (searchText.includes(filter)) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  }
+}
+
+// Search filter function for platforms grid
+function filterPlatformsGrid() {
+  const input = document.getElementById('platforms-search');
+  const filter = input.value.toLowerCase();
+  const grid = document.getElementById('platforms-grid');
+  const cards = grid.getElementsByClassName('card');
+
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    const text = card.textContent || card.innerText;
+    
+    if (text.toLowerCase().includes(filter)) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
   }
 }

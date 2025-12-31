@@ -76,6 +76,12 @@ async function renderStudy(container) {
             <i class="fas fa-plus"></i> Add Study Entry
           </button>
         </div>
+        <div style="padding: 20px; padding-bottom: 0;">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="study-search" class="search-input" placeholder="Search study entries by title, date, or amount..." onkeyup="filterStudyTable()">
+          </div>
+        </div>
         <div class="table-container">
           <table>
             <thead>
@@ -244,5 +250,28 @@ function closeModal() {
   const modal = document.getElementById('current-modal');
   if (modal) {
     modal.remove();
+  }
+}
+
+// Search filter function for study table
+function filterStudyTable() {
+  const input = document.getElementById('study-search');
+  const filter = input.value.toLowerCase();
+  const table = document.querySelector('.card table tbody');
+  const rows = table.getElementsByTagName('tr');
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const title = row.cells[1]?.textContent || '';
+    const date = row.cells[2]?.textContent || '';
+    const amount = row.cells[3]?.textContent || '';
+    
+    const searchText = (title + date + amount).toLowerCase();
+    
+    if (searchText.includes(filter)) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
   }
 }
