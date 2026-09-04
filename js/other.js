@@ -252,7 +252,7 @@ function renderOtherCategoryChart(categoryCharts, monthStart) {
   const monthKeys = months.map(month => `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`);
   const labels = months.map(month => month.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }));
   const categoryColors = [
-    '#ec4899', '#14b8a6', '#f59e0b', '#6366f1', '#06b6d4', '#84cc16',
+    '#ec4899', '#fcfdfd', '#f59e0b', '#6366f1', '#06b6d4', '#84cc16',
     '#f97316', '#a855f7', '#ef4444', '#22c55e', '#eab308', '#64748b'
   ];
   const datasets = categoryCharts.map(([type, stats], index) => ({
