@@ -31,10 +31,12 @@ async function renderOther(container) {
   other.forEach(item => {
     const type = item.type || 'Uncategorized';
     if (!typeStats[type]) {
-      typeStats[type] = { count: 0, total: 0, yearTotal: 0, lastMonthTotal: 0 };
+      typeStats[type] = { count: 0, total: 0, yearTotal: 0, lastMonthTotal: 0, monthlyTotals: {} };
     }
     typeStats[type].count++;
     typeStats[type].total += parseFloat(item.price || 0);
+    const expenseMonth = `${new Date(item.date).getFullYear()}-${String(new Date(item.date).getMonth() + 1).padStart(2, '0')}`;
+    typeStats[type].monthlyTotals[expenseMonth] = (typeStats[type].monthlyTotals[expenseMonth] || 0) + parseFloat(item.price || 0);
     
     // Add to year total if from current year
     if (new Date(item.date).getFullYear() === currentYear) {
@@ -46,6 +48,9 @@ async function renderOther(container) {
       typeStats[type].lastMonthTotal += parseFloat(item.price || 0);
     }
   });
+
+  const categoryCharts = Object.entries(typeStats)
+    .sort(([, first], [, second]) => second.lastMonthTotal - first.lastMonthTotal);
   
   container.innerHTML = `
     <div class="page-header">
@@ -102,6 +107,22 @@ async function renderOther(container) {
         <h3 style="grid-column: 1 / -1; font-size: 20px; font-weight: 600; margin-bottom: -8px;">
           <i class="fas fa-chart-pie"></i> Expense Categories
         </h3>
+        <div class="category-chart-carousel" style="grid-column: 1 / -1;">
+          <div class="category-chart-header">
+            <div>
+              <h3 class="category-chart-title"><i class="fas fa-chart-line"></i> Monthly Category Trend</h3>
+              <p class="category-chart-subtitle">Monthly expenses by category</p>
+            </div>
+            <button class="category-chart-toggle" type="button" onclick="toggleOtherCategoryChart()" aria-expanded="false">
+              <i class="fas fa-expand-alt"></i> Expand
+            </button>
+          </div>
+          <div id="other-category-chart-content" class="category-chart-content" hidden>
+            <div class="chart-container category-chart-container">
+            <canvas id="otherCategoryChart"></canvas>
+            </div>
+          </div>
+        </div>
         ${Object.entries(typeStats).map(([type, stats]) => `
           <div class="card">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
@@ -200,6 +221,98 @@ async function renderOther(container) {
       </div>
     </div>
   `;
+
+  renderOtherCategoryChart(categoryCharts, lastMonthStart);
+}
+
+let otherCategoryChart;
+
+function toggleOtherCategoryChart() {
+  const content = document.getElementById('other-category-chart-content');
+  const button = document.querySelector('.category-chart-toggle');
+  if (!content || !button) return;
+
+  const isExpanded = !content.hidden;
+  content.hidden = isExpanded;
+  button.setAttribute('aria-expanded', String(!isExpanded));
+  button.innerHTML = isExpanded
+    ? '<i class="fas fa-expand-alt"></i> Expand'
+    : '<i class="fas fa-compress-alt"></i> Collapse';
+
+  if (!isExpanded && otherCategoryChart) otherCategoryChart.resize();
+}
+
+function renderOtherCategoryChart(categoryCharts, monthStart) {
+  const chart = document.getElementById('otherCategoryChart');
+  if (!chart || !categoryCharts.length) return;
+
+  if (otherCategoryChart) otherCategoryChart.destroy();
+
+  const months = Array.from({ length: 12 }, (_, index) => new Date(monthStart.getFullYear(), monthStart.getMonth() - 11 + index, 1));
+  const monthKeys = months.map(month => `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`);
+  const labels = months.map(month => month.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }));
+  const categoryColors = [
+    '#ec4899', '#14b8a6', '#f59e0b', '#6366f1', '#06b6d4', '#84cc16',
+    '#f97316', '#a855f7', '#ef4444', '#22c55e', '#eab308', '#64748b'
+  ];
+  const datasets = categoryCharts.map(([type, stats], index) => ({
+    label: type,
+    data: monthKeys.map(monthKey => stats.monthlyTotals[monthKey] || 0),
+    borderColor: categoryColors[index],
+    backgroundColor: `${categoryColors[index]}22`,
+    borderWidth: 3,
+    tension: 0.35,
+    pointRadius: 3,
+    pointBackgroundColor: categoryColors[index],
+    fill: false
+  }));
+
+  otherCategoryChart = new Chart(chart, {
+    type: 'line',
+    data: {
+      labels,
+      datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { color: '#9ca3af', usePointStyle: true, padding: 15 }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            title: tooltipItems => tooltipItems.length ? tooltipItems[0].label : '',
+            label: context => `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#9ca3af' },
+          title: { display: true, text: 'Month', color: '#9ca3af' }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: {
+            color: '#9ca3af',
+            callback: value => `₹${value}`
+          },
+          title: { display: true, text: 'Amount spent (₹)', color: '#9ca3af' }
+        }
+      }
+    }
+  });
 }
 
 // Other Expense Modal Functions
