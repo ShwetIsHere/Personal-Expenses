@@ -1,7 +1,7 @@
 {
   "name": "fiq-finance-manager",
-  "version": "1.0.0",
-  "description": "A modern personal finance management application built with Electron and MySQL",
+  "version": "1.1.2",
+  "description": "Personal finance management",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
