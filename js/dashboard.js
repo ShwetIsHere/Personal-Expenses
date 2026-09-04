@@ -348,25 +348,19 @@ function renderPriceDistributionChart(totals) {
   new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Fuel', 'Service', 'Games', 'Study', 'Other', 'Insurance'],
+      labels: ['Games', 'Study', 'Other'],
       datasets: [{
         label: 'Total Spent (₹)',
-        data: [totals.fuel, totals.service, totals.games, totals.study, totals.other, totals.insurance],
+        data: [totals.games, totals.study, totals.other],
         backgroundColor: [
-          'rgba(102, 126, 234, 0.8)',
-          'rgba(139, 92, 246, 0.8)',
           'rgba(236, 72, 153, 0.8)',
           'rgba(20, 184, 166, 0.8)',
-          'rgba(245, 158, 11, 0.8)',
-          'rgba(99, 102, 241, 0.8)'
+          'rgba(245, 158, 11, 0.8)'
         ],
         borderColor: [
-          '#667eea',
-          '#8b5cf6',
           '#ec4899',
           '#14b8a6',
-          '#f59e0b',
-          '#6366f1'
+          '#f59e0b'
         ],
         borderWidth: 2,
         borderRadius: 8,
