@@ -231,13 +231,6 @@ async function showAddGameModal() {
       <div class="form-group">
         <label class="form-label">Platform</label>
         <select class="form-input" name="platform" required>
-          <option value="">Select Platform</option>
-          <option value="Steam">Steam</option>
-          <option value="Epic Games">Epic Games</option>
-          <option value="Gog">Gog</option>
-          <option value="PlayStation">PlayStation</option>
-          <option value="Xbox">Xbox</option>
-          <option value="Nintendo">Nintendo</option>
           ${uniquePlatforms.map(p => `<option value="${p.platform_name}">${p.platform_name}</option>`).join('')}
         </select>
       </div>
