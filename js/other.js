@@ -12,15 +12,26 @@ async function renderOther(container) {
   // Calculate stats
   const totalSpent = other.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
   const currentYear = new Date().getFullYear();
+  const currentDate = new Date();
+  const latestExpenseDate = other.length ? new Date(other[0].date) : currentDate;
+  const lastMonthStart = new Date(latestExpenseDate.getFullYear(), latestExpenseDate.getMonth(), 1);
+  const nextMonthStart = new Date(latestExpenseDate.getFullYear(), latestExpenseDate.getMonth() + 1, 1);
+  const lastMonthLabel = lastMonthStart.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
   const thisYearExpenses = other.filter(item => new Date(item.date).getFullYear() === currentYear);
   const thisYearTotal = thisYearExpenses.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
+  const lastMonthTotal = other
+    .filter(item => {
+      const expenseDate = new Date(item.date);
+      return expenseDate >= lastMonthStart && expenseDate < nextMonthStart;
+    })
+    .reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
   
   // Group by type
   const typeStats = {};
   other.forEach(item => {
     const type = item.type || 'Uncategorized';
     if (!typeStats[type]) {
-      typeStats[type] = { count: 0, total: 0, yearTotal: 0 };
+      typeStats[type] = { count: 0, total: 0, yearTotal: 0, lastMonthTotal: 0 };
     }
     typeStats[type].count++;
     typeStats[type].total += parseFloat(item.price || 0);
@@ -28,6 +39,11 @@ async function renderOther(container) {
     // Add to year total if from current year
     if (new Date(item.date).getFullYear() === currentYear) {
       typeStats[type].yearTotal += parseFloat(item.price || 0);
+    }
+
+    const expenseDate = new Date(item.date);
+    if (expenseDate >= lastMonthStart && expenseDate < nextMonthStart) {
+      typeStats[type].lastMonthTotal += parseFloat(item.price || 0);
     }
   });
   
@@ -72,11 +88,11 @@ async function renderOther(container) {
         </div>
         
         <div class="stat-card">
-          <div class="stat-label">Categories</div>
-          <div class="stat-value">${Object.keys(typeStats).length}</div>
+          <div class="stat-label">Last Month Expenses</div>
+          <div class="stat-value">${formatCurrency(lastMonthTotal)}</div>
           <div class="stat-change">
-            <i class="fas fa-tags"></i>
-            <span>Different Types</span>
+            <i class="fas fa-calendar"></i>
+            <span>${lastMonthLabel}</span>
           </div>
         </div>
       </div>
@@ -102,6 +118,12 @@ async function renderOther(container) {
                 <span style="font-size: 13px; color: var(--text-muted);">All Time</span>
                 <span style="font-size: 20px; font-weight: 700; color: var(--accent-5);">
                   ${formatCurrency(stats.total)}
+                </span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 13px; color: var(--text-muted);">${lastMonthLabel}</span>
+                <span style="font-size: 16px; font-weight: 600; color: var(--accent-3);">
+                  ${formatCurrency(stats.lastMonthTotal)}
                 </span>
               </div>
               <div style="display: flex; justify-content: space-between; align-items: center;">
